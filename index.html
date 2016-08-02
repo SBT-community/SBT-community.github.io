@@ -29,7 +29,17 @@
       $("#file-browser").slideDown()
     }
     
-    
+    function get_call_arguments()
+    {
+      var params = location.search.slice(1).split('&')
+      var pairs = {}
+      $.each(params, function(i, d)
+        {
+          r = d.split('=')
+          pairs[r[0]] = r[1]
+        })
+      return pairs
+    }
   </script>
 </head>
 <body>
@@ -41,6 +51,8 @@
   <tr valign="top" >
   <td width="20%">
   <div id="navigation" width="20%">
+    <button class="btn btn-default" id="login-button" style="display:none" type="button">
+    Войти</button>
     <button class="btn btn-default" onclick="backtofm();goto_home(on_file)" type="button">
     Домой</button>
   </div>
@@ -65,18 +77,29 @@
 
     prepare_fm(document.getElementById("file-browser"))
     
-    jQuery.ajax({
-        url: "https://github.com/login/oauth/authorize",
-        type: 'GET',
-        data: {},
-        success: function(data, idata, iidata)
-        {
-          console.log(data)
-          console.log(idata)
-          console.log(iidata)
-        }
-    })
+    var args = get_call_arguments()
     
+    if (!args.code)
+    {
+      var authbutton = document.getElementById("login-button")
+      //authbutton.style.display = "" //Will be commented until oauth wont be implemented
+      var state = Math.random().toString(36).substring(7);
+      var href_part = "https://github.com/login/oauth/authorize?" +
+          "client_id=9e609aef5d6e71a4ed63&" +
+          "redirect_url=\\\"https://sbt-community.github.io/\\\"&" +
+          "state=" + state
+      authbutton.onclick = function(){
+        location.href = href_part
+      }
+      console.log(href_part)
+    }
+    else
+    {
+      alert("Autorization token received but no client secret provided."+
+        "It's not your fault, just a signal about forbidden type of authorization.'")
+    }
+
+
     function commit()
     {
       var content = JSON.stringify(editor.getValue())
