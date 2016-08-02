@@ -1,0 +1,116 @@
+<html>
+<head>
+  <meta content="text/html; charset=UTF-8"></meta>
+  <meta charset="utf-8"></meta>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet" id="icon_stylesheet">
+  <link href="github.css" rel="stylesheet" id="icon_stylesheet">
+  <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet" id="theme_stylesheet">
+  <link href="https://cdn.jsdelivr.net/foundation/6.2.1/foundation.min.css" rel="stylesheet" id="theme_stylesheet">
+  <style>[class*="foundicon-"] {font-family: GeneralFoundicons;font-style: normal;}</style>
+  <title>Интерфейс переводчика</title>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+  <script type="text/javascript" src="https://rawgithub.com/jdorn/json-editor/master/dist/jsoneditor.min.js"></script>
+  <script src="editor_api.js"></script>
+  <script src="filemanager.js"></script>
+  <script type="text/javascript">
+    JSONEditor.defaults.options.theme = 'bootstrap3';
+    JSONEditor.defaults.options.disable_array_delete_all_rows = true;
+    JSONEditor.defaults.options.disable_array_delete_last_row = true;
+    JSONEditor.defaults.options.disable_array_reorder = true;
+    JSONEditor.defaults.options.disable_properties = true;
+    JSONEditor.defaults.options.disable_edit_json = true;
+    JSONEditor.defaults.options.object_layout = 'grid';
+    
+    function backtofm()
+    {
+      editor_holder = document.getElementById("editor-holder")
+      editor.setValue({})
+      $("#editor-holder").slideUp()
+      $("#file-browser").slideDown()
+    }
+    
+    
+  </script>
+</head>
+<body>
+  <table>
+  <tbody>
+  <tr heigth="20%">
+  <h1>Интерфейс переводчика</h1>
+  </tr>
+  <tr valign="top" >
+  <td width="20%">
+  <div id="navigation" width="20%">
+    <button class="btn btn-default" onclick="backtofm();goto_home(on_file)" type="button">
+    Домой</button>
+  </div>
+  </td>
+  <td>
+  <div id="file-browser">
+  </div>
+  <div id="editor-holder" style="">
+  <button class="btn btn-default" onclick="commit()" type="button">Сохранить</button>
+  <button class="btn btn-default" onclick="backtofm();" type="button">Назад</button>
+  </div>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  
+  <script type="text/javascript">
+    // Initialization
+    editor_holder = document.getElementById("editor-holder")
+    editor = get_editor(editor_holder)
+    editor_holder.style.display = "none" 
+
+    prepare_fm(document.getElementById("file-browser"))
+    
+    jQuery.ajax({
+        url: "https://github.com/login/oauth/authorize",
+        type: 'GET',
+        data: {},
+        success: function(data, idata, iidata)
+        {
+          console.log(data)
+          console.log(idata)
+          console.log(iidata)
+        }
+    })
+    
+    function commit()
+    {
+      var content = JSON.stringify(editor.getValue())
+      console.log(content)
+      console.log(editor.current_file)
+      
+      jQuery.ajax({
+        url: editor.current_file.url.split('?')[0],
+        type: 'PUT',
+        data: {
+          message: "Test commit from web-interface",
+          path: editor.current_file.path,
+          content: btoa(escape(content)),
+          sha: editor.current_file.sha,
+          branch: "web-interface-tests"
+        },
+        success: function()
+        {
+          alert("Commit pushed successfully!")
+        }
+    })
+    }
+    
+    function on_file(json)
+    {
+      
+      $("#editor-holder").slideDown()
+      $("#file-browser").slideUp()
+      console.log(json.download_url)
+      load_json(editor, json.download_url)
+      editor.current_file = json 
+    }
+    goto_home(on_file)
+
+  </script>
+</body>
+</html>
