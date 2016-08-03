@@ -118,6 +118,10 @@ function load_part(editor, start)
   {
     var fixed_schema = schema
     var titletext = editor.json[i]['Texts']['Eng']
+    if (! ('Rus' in editor.json[i]['Texts']))
+    {
+      editor.json[i]['Texts']['Rus'] = ""
+    }
     if (titletext.length > 16)
     {
       titletext = titletext.slice(0, 16) + "..."
