@@ -12,9 +12,9 @@ function prepare_fm(holder)
   tracker.setAttribute('id', "fmtracker")
   tracker.setAttribute('height', "10%")
   var table = document.createElement('table')
-  table.className = "files"
+  table.className = "table table-responsive table-hover"
   table.setAttribute("id", filetreeid)
-  table.style.border = '1px solid black'
+  //table.style.border = '1px solid black'
   //tbody = document.createElement('tbody')
   //table.appendChild(tbody)
   table.createTBody()
@@ -31,10 +31,11 @@ const file_icon = "<path d=\"M6 5H2V4h4v1zM2 8h7V7H2v1zm0 2h7V9H2v1zm0 " +
   "1 1-1h7.5L12 4.5zM11 5L8 2H1v12h10V5z\"></path>"
 const svg_template = "<svg aria-hidden=\"true\" class=\"octicon\" " +
 "height=\"16\" version=\"1.1\" viewBox=\"0 0 14 16\" width=\"14\">"
-function add_file(table, name, type, on_click)
+
+
+function add_file(table, name, type, on_click, progress)
 {
   var row = table.insertRow()
-  row.className = "js-navigation-item"
   var img = row.insertCell()
   if (type == "dir")
   {
@@ -44,17 +45,34 @@ function add_file(table, name, type, on_click)
   {
     img.innerHTML = svg_template + file_icon + "</svg>"
   }
-  img.className = "icon"
+  img.className = "img-responsive"
   img.style.width = 14
   var link = row.insertCell()
-  link.className = "content"
-  var compliteon = row.insertCell()
+  link.className = "container"
+  var completion = row.insertCell()
+  if (progress > 0)
+  {
+    var complindicator = document.createElement('div')
+    var complframe = document.createElement('div')
+    complframe.style["margin-bottom"] = 0
+    complframe.className = 'progress'
+    complindicator.className = 'progress-bar progress-bar-success'
+    complindicator.setAttribute('role', 'progressbar')
+    complindicator.setAttribute('aria-valuemin', 0)
+    complindicator.setAttribute('aria-valuemax', 100)
+    complindicator.setAttribute('aria-valuenow', progress)
+    complindicator.style.width =  progress + '%'
+    complframe.appendChild(complindicator)
+    completion.appendChild(complframe)
+  }
+  completion.className = 'container'
+
   var thelink = document.createElement('a')
-  thelink.className = "css-truncate"
+  thelink.className = ""
   thelink.title = name
   thelink.innerHTML = name
-  thelink.onclick = on_click
-  
+  row.onclick = on_click
+
   link.appendChild(thelink)
 }
 
@@ -77,15 +95,10 @@ function update_tree(file_json, on_file, path)
     on_file(file_json)
     return
   }
-  /*for(var i = 0; i <table.rows.length; i++)
-  {
-    table.deleteRow(i -1);
-  }*/
   $.each(table.getElementsByTagName('tbody'),
     function(i, b){
       b.innerHTML = ""
     })
-
   var offset = path.lastIndexOf("/")
   if (offset >= api_prefix.length - 1)
   {
@@ -100,7 +113,6 @@ function update_tree(file_json, on_file, path)
         goto_path(prev_path, on_file)
       })
   }
-    
   $.each(file_json, function(i, e)
     {
       if (e.size >= 1024000)
@@ -108,21 +120,18 @@ function update_tree(file_json, on_file, path)
       add_file(table, e.name, e.type, function()
         {
           goto_path(e.url, on_file)
-        })
+        }, 50)
     })
-  
 }
 
 
 
 function goto_path(path, on_file)
 {
-  
   $.getJSON(path,
     function(json){
       update_tree(json, on_file, path)
     })
-
 }
 
 function goto_home( on_file)

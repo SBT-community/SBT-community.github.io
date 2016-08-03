@@ -1,12 +1,10 @@
+<!DOCTYPE html>
 <html>
 <head>
   <meta content="text/html; charset=UTF-8"></meta>
   <meta charset="utf-8"></meta>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet" id="icon_stylesheet">
-
   <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet" id="theme_stylesheet">
-  <link href="https://cdn.jsdelivr.net/foundation/6.2.1/foundation.min.css" rel="stylesheet" id="theme_stylesheet">
-  <style>[class*="foundicon-"] {font-family: GeneralFoundicons;font-style: normal;}</style>
   <title>Интерфейс переводчика</title>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
   <script type="text/javascript" src="https://rawgithub.com/jdorn/json-editor/master/dist/jsoneditor.min.js"></script>
@@ -135,16 +133,15 @@
   </script>
 </head>
 <body>
-  <table style="height:100%;">
-  <tbody>
-  <tr heigth="20%">
+  <div id='maket' class="container-fluid">
+  <div id='head' class='container'>
   <h1>Интерфейс переводчика</h1>
-  </tr>
-  <tr valign="top" >
-  <td width="20%">
-
-  <div id="navigation"  width="20%" style="position: fixed">
-  <div id="fmnavigation" width="20%">
+  </div>
+  <div class='row'>
+  <div id='left-placeholder' class='col-sm-1' ></div>
+  <div id='navi-placeholder' class='col-sm-2' >
+  <div id="navigation" class='col-sm-2' style="position: fixed">
+  <div id="fmnavigation">
     <button class="btn btn-default" id="login-button" style="display:none"
       type="button">Войти</button>
     <button class="btn btn-default" onclick="backtofm();goto_home(on_file)"
@@ -165,24 +162,23 @@
     Попробовать снова</button></div></div>
   <form id="auth-form" style="display: none">
     Имя пользователя:
-    <input type='text' name='uname'>
+    <input type='text' class='form-control' name='uname'>
     Пароль:
-    <input type='password' name='upass'>
-    <button class="btn btn-default" onclick="login()" type="button">Вход</button>
+    <input type='password' class='form-control' name='upass'>
+    <button class="btn btn-success" onclick="login()" type="button">Вход</button>
   </form>
 
-  </div>
-
-  </td>
-  <td>
+  </div><!--navigation -->
+  </div><!--left -->
+  <div id='content' class='col-sm-8'>
   <div id="file-browser">
   </div>
   <div id="editor-holder" style="display: none">
   </div>
-  </td>
-  </tr>
-  </tbody>
-  </table>
+  </div><!--content -->
+  <div id='right-placeholder' class='col-sm-1' ></div>
+  </div><!--class:row -->
+  </div><!--maket -->
 
   <script type="text/javascript">
     // Initialization

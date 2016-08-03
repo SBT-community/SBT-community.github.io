@@ -84,27 +84,25 @@ function make_editor(holder)
 {
   var realholder = document.createElement('div')
   realholder.id = realholderid
-  var navigator = document.createElement('div')
+  var navigator = document.createElement('ul')
   navigator.id = navbarid
-  navigator.style.position = "relative"
-  let to_top = navigator.style.top
-  console.log(to_top)
+  navigator.className = 'pagination'
+  navigator.style["z-index"] = 10
+  holder.appendChild(navigator)
+  holder.appendChild(realholder)
+  let totop = $('#' + navbarid).offset().top
   document.addEventListener('scroll', function()
     {
-      if (document.body.scrollTop > 100)
+      if ($(window).scrollTop() > totop)
       {
         navigator.style.top = 0
         navigator.style.position = "fixed"
-        navigator.style["z-index"] = 10
       }
       else
       {
         navigator.style.position = "relative"
       }
     })
-  holder.appendChild(navigator)
-  holder.appendChild(realholder)
-
   return {filedata: {}, json: {}, subeditors: {}}
 }
 
@@ -144,7 +142,6 @@ function load_part(editor, start)
         d.style.height=300
       }
     })
-  
   $.each($("#"+ realholderid + " input[type=week]"),
     function(i,c){
       var d = c.parentNode
@@ -187,22 +184,28 @@ function json_onload(editor, data)
         editor.json[n] = e.getValue()
         e.destroy()
       })
+      $.each(document.getElementById(navbarid).childNodes, function(i, c){
+        c.className = ""
+      }) 
+      document.getElementById('navbarel-' + start).className = 'active'
       load_part(editor, start)
     })
   }
 
   for (i = 0 ; i < data.length; i += editors_per_page)
   {
-    var navbutton = document.createElement('button')
-    navbutton.className = "btn btn-default"
+    var navelement = document.createElement('li')
+    navelement.id = 'navbarel-' + i
+    var navbutton = document.createElement('a')
     navbutton.innerHTML = page
     navbutton.title = page
     navbutton.onclick = get_onclick(i)
-    navbar.appendChild(navbutton)
+    navelement.appendChild(navbutton)
+    navbar.appendChild(navelement)
     editor.json = editor.json.concat(data.slice(i, i+editors_per_page))
     page += 1
   }
-
+  document.getElementById('navbarel-0').className = 'active'
   load_part(editor, 0)
 }
 
@@ -224,5 +227,4 @@ function load_json(editor,url)
   $.getJSON(url, function(data){
     json_onload(editor, data)
   })
-
 }
