@@ -162,6 +162,14 @@ function load_part(editor, start)
     })
 }
 
+function get_json(editor)
+{
+  $.each(editor.subeditors, function(i, s)
+  {
+    editor.json[i] = s.getValue()
+  })
+  return editor.json
+}
 
 function json_onload(editor, data)
 {
