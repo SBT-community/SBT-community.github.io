@@ -24,9 +24,11 @@
     function backtofm()
     {
       editor_holder = document.getElementById("editor-holder")
-      editor.setValue({})
       $("#editor-holder").slideUp()
+      $("#editor-navigation").slideUp()
       $("#file-browser").slideDown()
+      $("#fmnavigation").slideDown()
+      reset(editor)
     }
     
     function get_call_arguments()
@@ -49,20 +51,27 @@
   <h1>Интерфейс переводчика</h1>
   </tr>
   <tr valign="top" >
-  <td width="20%">
-  <div id="navigation" width="20%">
-    <button class="btn btn-default" id="login-button" style="display:none" type="button">
-    Войти</button>
-    <button class="btn btn-default" onclick="backtofm();goto_home(on_file)" type="button">
-    Домой</button>
+  <td width="20%" >
+  <div id="navigation"  width="20%" style="position: fixed">
+  <div id="fmnavigation" width="20%">
+    <button class="btn btn-default" id="login-button" style="display:none"
+      type="button">Войти</button>
+    <button class="btn btn-default" onclick="backtofm();goto_home(on_file)"
+      type="button">Домой</button>
+  </div>
+  <div id="editor-navigation"  style="display: none">
+    <button class="btn btn-default" onclick="commit()" type="button">Сохранить</button>
+    <button class="btn btn-default" onclick="backtofm();" type="button">Назад</button>
+  </div>
+  <button class="btn btn-default"
+      onclick="$('html, body').stop().animate({scrollTop: 0}, 1000)"
+      type="button">Наверх</button>
   </div>
   </td>
   <td>
   <div id="file-browser">
   </div>
-  <div id="editor-holder" style="">
-  <button class="btn btn-default" onclick="commit()" type="button">Сохранить</button>
-  <button class="btn btn-default" onclick="backtofm();" type="button">Назад</button>
+  <div id="editor-holder" style="display: none">
   </div>
   </td>
   </tr>
@@ -72,8 +81,7 @@
   <script type="text/javascript">
     // Initialization
     editor_holder = document.getElementById("editor-holder")
-    editor = get_editor(editor_holder)
-    editor_holder.style.display = "none" 
+    editor = make_editor(editor_holder)
 
     prepare_fm(document.getElementById("file-browser"))
     
@@ -102,18 +110,18 @@
 
     function commit()
     {
-      var content = JSON.stringify(editor.getValue())
+      var content = JSON.stringify(editor.json)
       console.log(content)
-      console.log(editor.current_file)
+      console.log(editor.filedata)
       
       jQuery.ajax({
-        url: editor.current_file.url.split('?')[0],
+        url: editor.filedata.url.split('?')[0],
         type: 'PUT',
         data: {
           message: "Test commit from web-interface",
-          path: editor.current_file.path,
+          path: editor.filedata.path,
           content: btoa(escape(content)),
-          sha: editor.current_file.sha,
+          sha: editor.filedata.sha,
           branch: "web-interface-tests"
         },
         success: function()
@@ -128,9 +136,11 @@
       
       $("#editor-holder").slideDown()
       $("#file-browser").slideUp()
+      $("#editor-navigation").slideDown()
+      $("#fmnavigation").slideUp()
       console.log(json.download_url)
       load_json(editor, json.download_url)
-      editor.current_file = json 
+      editor.filedata = json
     }
     goto_home(on_file)
 
