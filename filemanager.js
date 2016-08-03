@@ -45,6 +45,7 @@ function add_file(table, name, type, on_click)
     img.innerHTML = svg_template + file_icon + "</svg>"
   }
   img.className = "icon"
+  img.style.width = 14
   var link = row.insertCell()
   link.className = "content"
   var compliteon = row.insertCell()
