@@ -55,35 +55,39 @@
       unlogin()
       document.getElementById('authorized').style.display = ''
       $.ajax({
-        url: "https://api.github.com/authorizations",
+        url: "https://api.github.com/user",
         type: 'GET',
         beforeSend: function (xhr) {
           xhr.setRequestHeader ("Authorization", "Basic " +
             btoa(authdata.uname + ":" + authdata.upass));
         },
         data: {},
-        success: function(r, d, raw)
+        success: function(user_data)
         {
+          authdata.email = user_data.email
           var date = new Date()
           date.setDate(date.getDate + 365)
           document.cookie = "sbtghuser=" + authdata.uname +
             ";domain=" + document.domain + ";expires="+ date.toUTCString()
           document.cookie = "sbtghsword=" + authdata.upass +
             ";domain=" + document.domain + ";expires="+ date.toUTCString()
-          show_authdata()
+          show_authdata(user_data)
         }
       })
     }
 
-    function show_authdata()
+    function show_authdata(udata)
     {
       var authinfo = document.getElementById('authorized')
       authinfo.style.display = ''
       authinfo.innerHTML = "Авторизирован как:"
       var link = document.createElement('a')
       link.setAttribute('href', 'https://github.com/' + authdata.uname)
-      link.innerHTML = authdata.uname
-
+      link.innerHTML = udata.login
+      var idiv = document.createElement('div')
+      var img = document.createElement('img')
+      img.setAttribute('src', udata.avatar_url)
+      img.className = 'img-responsive img-rounded'
       var ebutdiv = document.createElement('div')
       var ldiv = document.createElement('div')
       var exitbutton = document.createElement('button')
@@ -91,10 +95,12 @@
       exitbutton.setAttribute('type', 'button')
       exitbutton.innerHTML = "Выйти"
       exitbutton.title = "Выйти"
-      exitbutton.onclick = unlogin
+      exitbutton.onclick = function() {unlogin(); location.reload()}
+      idiv.appendChild(img)
       ldiv.appendChild(link)
       ebutdiv.appendChild(exitbutton)
       authinfo.appendChild(ldiv)
+      authinfo.appendChild(idiv)
       authinfo.appendChild(ebutdiv)
     }
 
@@ -219,22 +225,31 @@
 
     function commit()
     {
-      var content = JSON.stringify(editor.json)
+      var content = JSON.stringify(get_json(editor))
       console.log(content)
       console.log(editor.filedata)
 
       jQuery.ajax({
         url: editor.filedata.url.split('?')[0],
         type: 'PUT',
-        data: {
+        contentType: 'application/json',
+        beforeSend: function (xhr) {
+          xhr.setRequestHeader ("Authorization", "Basic " +
+            btoa(authdata.uname + ":" + authdata.upass));
+        },
+        data: JSON.stringify({
           message: "Test commit from web-interface",
           path: editor.filedata.path,
           content: btoa(escape(content)),
           sha: editor.filedata.sha,
-          branch: "web-interface-tests"
-        },
-        success: function()
+          branch: "web-interface-tests",
+          author: {name: authdata.uname, email: authdata.email},
+          committer: {name: authdata.uname, email: authdata.email},
+        }),
+        success: function(d, s, r)
         {
+          console.log(d)
+          console.log(s)
           alert("Commit pushed successfully!")
         }
     })
