@@ -43,6 +43,61 @@
       return pairs
     }
 
+    function unlogin(){
+        var date = new Date();
+        date.setDate(date.getDate - 1)
+        document.cookie = "sbtghsword=;expires=" + date.toUTCString()
+        document.cookie = "sbtghuser=;expires=" + date.toUTCString()
+      }
+
+    function check_authdata()
+    {
+      unlogin()
+      document.getElementById('authorized').style.display = ''
+      $.ajax({
+        url: "https://api.github.com/authorizations",
+        type: 'GET',
+        beforeSend: function (xhr) {
+          xhr.setRequestHeader ("Authorization", "Basic " +
+            btoa(authdata.uname + ":" + authdata.upass));
+        },
+        data: {},
+        success: function(r, d, raw)
+        {
+          var date = new Date()
+          date.setDate(date.getDate + 365)
+          document.cookie = "sbtghuser=" + authdata.uname +
+            ";domain=" + document.domain + ";expires="+ date.toUTCString()
+          document.cookie = "sbtghsword=" + authdata.upass +
+            ";domain=" + document.domain + ";expires="+ date.toUTCString()
+          show_authdata()
+        }
+      })
+    }
+
+    function show_authdata()
+    {
+      var authinfo = document.getElementById('authorized')
+      authinfo.style.display = ''
+      authinfo.innerHTML = "Авторизирован как:"
+      var link = document.createElement('a')
+      link.setAttribute('href', 'https://github.com/' + authdata.uname)
+      link.innerHTML = authdata.uname
+
+      var ebutdiv = document.createElement('div')
+      var ldiv = document.createElement('div')
+      var exitbutton = document.createElement('button')
+      exitbutton.className = "btn btn-default"
+      exitbutton.setAttribute('type', 'button')
+      exitbutton.innerHTML = "Выйти"
+      exitbutton.title = "Выйти"
+      exitbutton.onclick = unlogin
+      ldiv.appendChild(link)
+      ebutdiv.appendChild(exitbutton)
+      authinfo.appendChild(ldiv)
+      authinfo.appendChild(ebutdiv)
+    }
+
     function getCookie(name) {
       var matches = document.cookie.match(new RegExp(
         "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
@@ -57,14 +112,10 @@
           obj[item.name] = item.value;
           return obj;
         }, {});
-      console.log(data)
-      var date = new Date()
-      date.setDate(date.getDate + 365)
-      document.cookie = "sbtghuser=" + data.uname +
-        ";domain=" + document.domain + ";expires="+ date.toUTCString()
-      document.cookie = "sbtghsword=" + data.upass +
-        ";domain=" + document.domain + ";expires="+ date.toUTCString()
-      location.reload()
+      authdata = data
+      check_authdata()
+      $('#auth-form').slideUp()
+      $('#authorized').slideDown()
     }
 
     function get_authdata()
@@ -102,9 +153,11 @@
       onclick="$('html, body').stop().animate({scrollTop: 0}, 1000)"
       type="button">Наверх</button>
 
-  <div id='authorized' style='display: none'>
-  Авторизирован как </div>
-  <form id="auth-form" style="display:none" onsubmit=>
+  <div id='authorized' style='display: none'>Авторизация не удалась!
+  <div><button class="btn btn-default" type="button"
+    onclick="$('#authorized').slideUp(); $('#auth-form').slideDown()">
+    Попробовать снова</button></div></div>
+  <form id="auth-form" style="display: none">
     Имя пользователя:
     <input type='text' name='uname'>
     Пароль:
@@ -139,27 +192,7 @@
     }
     else
     {
-      var authinfo = document.getElementById('authorized')
-      authinfo.style.display = ''
-      var link = document.createElement('a')
-      link.setAttribute('href', 'https://github.com/' + authdata.uname)
-      link.innerHTML = authdata.uname
-      authinfo.appendChild(link)
-      var ebutdiv = document.createElement('div')
-      var exitbutton = document.createElement('button')
-      exitbutton.className = "btn btn-default"
-      exitbutton.setAttribute('type', 'button')
-      exitbutton.innerHTML = "Выйти"
-      exitbutton.title = "Выйти"
-      exitbutton.onclick = function (){
-        var date = new Date();
-        date.setDate(date.getDate - 1)
-        document.cookie = "sbtghsword=;expires=" + date.toUTCString()
-        document.cookie = "sbtghuser=;expires=" + date.toUTCString()
-        location.reload()
-      }
-      ebutdiv.appendChild(exitbutton)
-      authinfo.appendChild(ebutdiv)
+      check_authdata()
     }
 
     var args = get_call_arguments()
