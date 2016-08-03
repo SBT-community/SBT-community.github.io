@@ -20,7 +20,7 @@
     JSONEditor.defaults.options.disable_properties = true;
     JSONEditor.defaults.options.disable_edit_json = true;
     JSONEditor.defaults.options.object_layout = 'grid';
-    
+
     function backtofm()
     {
       editor_holder = document.getElementById("editor-holder")
@@ -30,7 +30,7 @@
       $("#fmnavigation").slideDown()
       reset(editor)
     }
-    
+
     function get_call_arguments()
     {
       var params = location.search.slice(1).split('&')
@@ -42,16 +42,50 @@
         })
       return pairs
     }
+
+    function getCookie(name) {
+      var matches = document.cookie.match(new RegExp(
+        "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+      ));
+      return matches ? decodeURIComponent(matches[1]) : "";
+    }
+
+    function login()
+    {
+      var data = $('#auth-form').serializeArray().reduce(
+        function(obj, item) {
+          obj[item.name] = item.value;
+          return obj;
+        }, {});
+      console.log(data)
+      var date = new Date()
+      date.setDate(date.getDate + 365)
+      document.cookie = "sbtghuser=" + data.uname +
+        ";domain=" + document.domain + ";expires="+ date.toUTCString()
+      document.cookie = "sbtghsword=" + data.upass +
+        ";domain=" + document.domain + ";expires="+ date.toUTCString()
+      location.reload()
+    }
+
+    function get_authdata()
+    {
+      var uname = getCookie('sbtghuser')
+      if (uname.length == 0)
+      { return false }
+      var upass = getCookie('sbtghsword')
+      return {uname : uname, upass: upass}
+    }
   </script>
 </head>
 <body>
-  <table>
+  <table style="height:100%;">
   <tbody>
   <tr heigth="20%">
   <h1>Интерфейс переводчика</h1>
   </tr>
   <tr valign="top" >
-  <td width="20%" >
+  <td width="20%">
+
   <div id="navigation"  width="20%" style="position: fixed">
   <div id="fmnavigation" width="20%">
     <button class="btn btn-default" id="login-button" style="display:none"
@@ -63,10 +97,23 @@
     <button class="btn btn-default" onclick="commit()" type="button">Сохранить</button>
     <button class="btn btn-default" onclick="backtofm();" type="button">Назад</button>
   </div>
+
   <button class="btn btn-default"
       onclick="$('html, body').stop().animate({scrollTop: 0}, 1000)"
       type="button">Наверх</button>
+
+  <div id='authorized' style='display: none'>
+  Авторизирован как </div>
+  <form id="auth-form" style="display:none" onsubmit=>
+    Имя пользователя:
+    <input type='text' name='uname'>
+    Пароль:
+    <input type='password' name='upass'>
+    <button class="btn btn-default" onclick="login()" type="button">Вход</button>
+  </form>
+
   </div>
+
   </td>
   <td>
   <div id="file-browser">
@@ -77,20 +124,49 @@
   </tr>
   </tbody>
   </table>
-  
+
   <script type="text/javascript">
     // Initialization
     editor_holder = document.getElementById("editor-holder")
     editor = make_editor(editor_holder)
 
     prepare_fm(document.getElementById("file-browser"))
-    
+
+    var authdata = get_authdata()
+    if (authdata == false)
+    {
+      document.getElementById('auth-form').style.display = ''
+    }
+    else
+    {
+      var authinfo = document.getElementById('authorized')
+      authinfo.style.display = ''
+      var link = document.createElement('a')
+      link.setAttribute('href', 'https://github.com/' + authdata.uname)
+      link.innerHTML = authdata.uname
+      authinfo.appendChild(link)
+      var ebutdiv = document.createElement('div')
+      var exitbutton = document.createElement('button')
+      exitbutton.className = "btn btn-default"
+      exitbutton.setAttribute('type', 'button')
+      exitbutton.innerHTML = "Выйти"
+      exitbutton.title = "Выйти"
+      exitbutton.onclick = function (){
+        var date = new Date();
+        date.setDate(date.getDate - 1)
+        document.cookie = "sbtghsword=;expires=" + date.toUTCString()
+        document.cookie = "sbtghuser=;expires=" + date.toUTCString()
+        location.reload()
+      }
+      ebutdiv.appendChild(exitbutton)
+      authinfo.appendChild(ebutdiv)
+    }
+
     var args = get_call_arguments()
-    
     if (!args.code)
     {
       var authbutton = document.getElementById("login-button")
-      //authbutton.style.display = "" //Will be commented until oauth wont be implemented
+      //authbutton.style.display = ""//Will be commented until oauth wont be implemented
       var state = Math.random().toString(36).substring(7);
       var href_part = "https://github.com/login/oauth/authorize?" +
           "client_id=9e609aef5d6e71a4ed63&" +
@@ -99,12 +175,12 @@
       authbutton.onclick = function(){
         location.href = href_part
       }
-      console.log(href_part)
     }
     else
     {
       alert("Autorization token received but no client secret provided."+
-        "It's not your fault, just a signal about forbidden type of authorization.'")
+        "It's not your fault, just a signal about forbidden type of authorization." +
+        "Actually you shouldn't see that message. Do you used some hackery?")
     }
 
 
@@ -113,7 +189,7 @@
       var content = JSON.stringify(editor.json)
       console.log(content)
       console.log(editor.filedata)
-      
+
       jQuery.ajax({
         url: editor.filedata.url.split('?')[0],
         type: 'PUT',
@@ -130,10 +206,9 @@
         }
     })
     }
-    
+
     function on_file(json)
     {
-      
       $("#editor-holder").slideDown()
       $("#file-browser").slideUp()
       $("#editor-navigation").slideDown()
