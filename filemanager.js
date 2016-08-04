@@ -1,8 +1,8 @@
 
 const filetreeid = 'fmtree'
-const api_prefix = "https://api.github.com/repos/xomachine"+
+const api_prefix = "https://api.github.com/repos/SBT-community"+
   "/Starbound_RU/contents/translations"
-const branch = "web-interface-tests"
+const branch = "web-interface"
 
 function prepare_fm(holder)
 {
