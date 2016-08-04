@@ -180,11 +180,23 @@
   </div><!--navigation -->
   </div><!--left -->
   <div id='content' class='col-sm-8'>
+  <!-- Alerts-->
+  <div class="alert alert-success fade in" id='commitSuccess'
+  style='display:none'>
+  <a href='#' class="close" onclick='$("#commitSuccess").slideUp()'>&times;</a>
+  <strong>Успех!</strong> Ваши изменения успешно сохранены!
+  </div>
+  <div class="alert alert-danger fade in" id='commitFailed'
+  style='display:none'>
+  <a href='#' class="close" onclick='$("#commitFailed").slideUp()'>&times;</a>
+  <p id='commitFailedText'></p>
+  </div>
   <div class="alert alert-danger fade in" id='loginRequiredAlert'
   style='display:none'>
   <a href='#' class="close" onclick='$("#loginRequiredAlert").slideUp()'>&times;</a>
   <strong>Ошибка!</strong> Чтобы сохранить изменения нужно войти.
   </div>
+  <!-- /Alerts-->
   <div id="file-browser">
   </div>
   <div id="editor-holder" style="display: none">
@@ -291,8 +303,17 @@
         data: JSON.stringify(commit_body),
         success: function(d, s, r)
         {
-          alert("Commit pushed successfully!")
-        }
+          $('#commitMessageText')[0].value = ""
+          $('#commitSuccess').slideDown().delay(2000).slideUp()
+        },
+        error: function(d, status, errorThrown)
+        {
+          $('#commitErrorText')[0].innerHTML = "<strong>Ошибка!</strong> При попытке " +
+            "сохранения изменений произошла ошибка: " +
+            (errorThrown ? errorThrown: "неизвестная ошибка" ) + " статус: " +
+            (status ? status: "неизвестен" )
+          $('#commitError').slideDown().delay(10000).slideUp()
+        },
     })
     }
 
