@@ -130,17 +130,12 @@ function load_part(editor, start)
     editor.subeditors[i] = subeditor
   }
   $.each($("#"+ realholderid + " input[type=url]"), function(i,d){d.disabled=true})
-  $.each($("#"+ realholderid + " [name$=\"[Eng]\"]"), function(i,d){d.disabled=true})
+  $.each($("#"+ realholderid + " [name$=\"[Eng]\"]"), function(i,d){d.readOnly=true})
   $.each($("#"+ realholderid + " textarea[name$=\"]\"]"),
     function(i,d){
-      if (d.scrollHeight < 300)
-      {
-        d.style.height=d.scrollHeight
-      }
-      else
-      {
-        d.style.height=300
-      }
+      d.className = ' input-lg form-control'
+      console.log(d.value.length)
+      d.rows = Math.ceil(d.value.length/27)
     })
   $.each($("#"+ realholderid + " input[type=week]"),
     function(i,c){
