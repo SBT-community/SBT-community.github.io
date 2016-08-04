@@ -4,10 +4,11 @@
   <meta content="text/html; charset=UTF-8"></meta>
   <meta charset="utf-8"></meta>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet" id="icon_stylesheet">
-  <link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet" id="theme_stylesheet">
+  <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" id="theme_stylesheet">
   <title>Интерфейс переводчика</title>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
   <script type="text/javascript" src="https://rawgithub.com/jdorn/json-editor/master/dist/jsoneditor.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <script src="editor_api.js"></script>
   <script src="filemanager.js"></script>
   <script type="text/javascript">
@@ -100,6 +101,11 @@
       authinfo.appendChild(ldiv)
       authinfo.appendChild(idiv)
       authinfo.appendChild(ebutdiv)
+      $('#loginRequiredAlert').slideUp()
+      $('#commitButton')[0].className = 'btn btn-success'
+      $('#commitButton')[0].onclick = null
+      $('#commitButton')[0].setAttribute('data-target', '#commitMessage')
+      $('#commitButton')[0].setAttribute('data-toggle', 'modal')
     }
 
     function getCookie(name) {
@@ -137,6 +143,7 @@
   <div id='head' class='container'>
   <h1>Интерфейс переводчика</h1>
   </div>
+
   <div class='row'>
   <div id='left-placeholder' class='col-sm-1' ></div>
   <div id='navi-placeholder' class='col-sm-2' >
@@ -148,7 +155,8 @@
       type="button">Домой</button>
   </div>
   <div id="editor-navigation"  style="display: none">
-    <button class="btn btn-default" onclick="commit()" type="button">Сохранить</button>
+    <button class="btn btn-default" onclick='$("#loginRequiredAlert").slideDown()'
+    type="button" id='commitButton'>Сохранить</button>
     <button class="btn btn-default" onclick="backtofm();" type="button">Назад</button>
   </div>
 
@@ -171,6 +179,11 @@
   </div><!--navigation -->
   </div><!--left -->
   <div id='content' class='col-sm-8'>
+  <div class="alert alert-danger fade in" id='loginRequiredAlert'
+  style='display:none'>
+  <a href='#' class="close" onclick='$("#loginRequiredAlert").slideUp()'>&times;</a>
+  <strong>Ошибка!</strong> Чтобы сохранить изменения нужно войти.
+  </div>
   <div id="file-browser">
   </div>
   <div id="editor-holder" style="display: none">
@@ -179,6 +192,30 @@
   <div id='right-placeholder' class='col-sm-1' ></div>
   </div><!--class:row -->
   </div><!--maket -->
+
+  <!--Commit modal -->
+  <div id='commitMessage' class='modal fade' role='dialog'>
+  <div class='modal-dialog modal-lg'>
+  <div class='modal-content'>
+  <div class='modal-header'>
+    <button type="button" class="close" data-dismiss="modal">&times;</button>
+    <h4 class="modal-title">Комментарий к изменениям</h4>
+  </div>
+  <div class='modal-body'>
+    Введите комментарий с кратким описанием внесенных изменений, а также, возможно,
+    основаниями для принятых решений. Данный комментарий будет сохранен в истории
+    изменений.
+    <textarea class='form-control input-lg' id='commitMessageText' rows='8'></textarea>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-success" onclick='commit()'
+    data-dismiss="modal">
+    Сохранить</button>
+    <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+  </div>
+  </div>
+  </div>
+  </div><!--/Commit modal -->
 
   <script type="text/javascript">
     // Initialization
@@ -227,8 +264,11 @@
 
       if (!authdata.uname)
       {return }
+
+      var messagetext = $('#commitMessageText')[0].value
+
       var commit_body = {
-          message: "Test commit from web-interface",
+          message: messagetext,
           path: editor.filedata.path,
           content: btoa(escape(content)),
           sha: editor.filedata.sha,
