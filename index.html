@@ -225,6 +225,21 @@
       console.log(content)
       console.log(editor.filedata)
 
+      if (!authdata.uname)
+      {return }
+      var commit_body = {
+          message: "Test commit from web-interface",
+          path: editor.filedata.path,
+          content: btoa(escape(content)),
+          sha: editor.filedata.sha,
+          branch: "web-interface-tests",
+        }
+      if (authdata.email)
+      {
+        commit_body.author = {name: authdata.uname, email: authdata.email}
+        commit_body.commiter = {name: authdata.uname, email: authdata.email}
+      }
+
       jQuery.ajax({
         url: editor.filedata.url.split('?')[0],
         type: 'PUT',
@@ -233,19 +248,9 @@
           xhr.setRequestHeader ("Authorization", "Basic " +
             btoa(authdata.uname + ":" + authdata.upass));
         },
-        data: JSON.stringify({
-          message: "Test commit from web-interface",
-          path: editor.filedata.path,
-          content: btoa(escape(content)),
-          sha: editor.filedata.sha,
-          branch: "web-interface-tests",
-          author: {name: authdata.uname, email: authdata.email},
-          committer: {name: authdata.uname, email: authdata.email},
-        }),
+        data: JSON.stringify(commit_body),
         success: function(d, s, r)
         {
-          console.log(d)
-          console.log(s)
           alert("Commit pushed successfully!")
         }
     })
