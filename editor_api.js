@@ -134,7 +134,6 @@ function load_part(editor, start)
   $.each($("#"+ realholderid + " textarea[name$=\"]\"]"),
     function(i,d){
       d.className = ' input-lg form-control'
-      console.log(d.value.length)
       d.rows = Math.ceil(d.value.length/27)
     })
   $.each($("#"+ realholderid + " input[type=week]"),
