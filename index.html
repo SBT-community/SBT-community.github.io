@@ -9,6 +9,7 @@
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
   <script type="text/javascript" src="https://rawgithub.com/jdorn/json-editor/master/dist/jsoneditor.min.js"></script>
   <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://rawgit.com/dankogai/js-base64/master/base64.min.js"></script>
   <script src="editor_api.js"></script>
   <script src="filemanager.js"></script>
   <script type="text/javascript">
@@ -258,19 +259,18 @@
 
     function commit()
     {
-      var content = JSON.stringify(get_json(editor))
-      console.log(content)
-      console.log(editor.filedata)
-
+      var content = JSON.stringify(get_json(editor), null, '  ')
       if (!authdata.uname)
-      {return }
+      {return}
 
       var messagetext = $('#commitMessageText')[0].value
+      if (messagetext.length == 0)
+      {messagetext = 'Обновление ' + editor.filedata.path}
 
       var commit_body = {
           message: messagetext,
           path: editor.filedata.path,
-          content: btoa(escape(content)),
+          content: Base64.encode(content),
           sha: editor.filedata.sha,
           branch: "web-interface-tests",
         }
