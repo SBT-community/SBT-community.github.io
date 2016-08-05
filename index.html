@@ -46,8 +46,10 @@
     function unlogin(){
         var date = new Date();
         date.setDate(date.getDate - 1)
-        document.cookie = "sbtghsword=;expires=" + date.toUTCString()
-        document.cookie = "sbtghuser=;expires=" + date.toUTCString()
+        document.cookie = "sbtghsword=;expires=" + date.toUTCString() +
+          ";domain=" + document.domain
+        document.cookie = "sbtghuser=;expires=" + date.toUTCString() +
+          ";domain=" + document.domain
       }
 
     function check_authdata()
