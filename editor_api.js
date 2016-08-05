@@ -123,6 +123,10 @@ function load_part(editor, start)
     {
       titletext = titletext.slice(0, 16) + "..."
     }
+    if (editor.json.length-start < 2)
+    {
+      fixed_schema.schema.options.collapsed = false
+    }
     fixed_schema.schema.title = titletext
     var subeditor = new JSONEditor(holder, fixed_schema)
     subeditor.setValue(editor.json[i])
