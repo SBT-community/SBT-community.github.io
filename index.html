@@ -325,7 +325,7 @@
       $("#editor-navigation").slideDown()
       $("#fmnavigation").slideUp()
       console.log(json.download_url)
-      load_json(editor, json.download_url)
+      open_json(editor, Base64.decode(json.content))
       editor.filedata = json
     }
     goto_home(on_file)

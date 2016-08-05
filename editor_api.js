@@ -222,6 +222,12 @@ function reset(editor)
   editor.filedata = {}
 }
 
+function open_json(editor, content)
+{
+  data = $.parseJSON(content)
+  json_onload(editor, data)
+}
+
 function load_json(editor,url)
 {
   $.getJSON(url, function(data){
