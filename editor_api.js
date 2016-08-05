@@ -66,7 +66,6 @@ const schema = {
         items:{
           type: "string",
           title: "Ссылки на starbound wiki:",
-          format: "week",
           links:[
             {
               rel: "Data",
@@ -139,7 +138,7 @@ function load_part(editor, start)
         d.rows = Math.ceil(d.value.length/27)
       }
     })
-  $.each($("#"+ realholderid + " input[type=week]"),
+  $.each($("#"+ realholderid + ' input[name^="root[Files]"]'),
     function(i,c){
       var d = c.parentNode
       var o = d.parentNode
