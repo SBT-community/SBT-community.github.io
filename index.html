@@ -45,7 +45,6 @@
 
     function unlogin(){
         var date = new Date();
-        date.setDate(date.getDate - 1)
         document.cookie = "sbtghsword=;expires=" + date.toUTCString() +
           ";domain=" + document.domain
         document.cookie = "sbtghuser=;expires=" + date.toUTCString() +
@@ -68,11 +67,11 @@
         {
           authdata.email = user_data.email
           var date = new Date()
-          date.setDate(date.getDate + 365)
+          date.setMonth(date.getMonth() + 1)
           document.cookie = "sbtghuser=" + authdata.uname +
-            ";domain=" + document.domain + ";expires="+ date.toUTCString()
+            ";domain=" + document.domain + ';expires='+ date.toUTCString()
           document.cookie = "sbtghsword=" + authdata.upass +
-            ";domain=" + document.domain + ";expires="+ date.toUTCString()
+            ";domain=" + document.domain + ';expires='+ date.toUTCString()
           show_authdata(user_data)
         }
       })
