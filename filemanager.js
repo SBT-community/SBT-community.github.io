@@ -171,8 +171,15 @@ theStatusUpdater.onmessage = function(msg)
       var obj = document.getElementById(msg.data.id)
       obj.style.width = msg.data.val + '%'
       obj.setAttribute('aria-valuenow', msg.data.val)
-      obj.innerHTML = Math.ceil(msg.data.val) + '%'
-      console.log('Message from worker: ')
+      obj.innerHTML = Math.floor(msg.data.val) + '%'
+      if (msg.data.val < 50)
+      {
+        obj.className = 'progress-bar progress-bar-danger'
+      }
+      else if (msg.data.val < 100)
+      {
+        obj.className = 'progress-bar progress-bar-warning'
+      }
       break;
     default:
       break;
