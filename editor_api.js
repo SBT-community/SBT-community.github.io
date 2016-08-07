@@ -10,11 +10,6 @@ const schema = {
     type: "object",
     format: "table",
     properties: {
-      "JSON_path":{
-        type: "string",
-        format: "url",
-        title: "Тип текстовой метки"
-      },
       "Texts":{
         title: "Тексты",
         options:{
@@ -55,7 +50,7 @@ const schema = {
         }
       },
       "Files":{
-        type: "array",
+        type: "object",
         title: "Используется в:",
         format: "table",
         options:{
@@ -63,16 +58,26 @@ const schema = {
           disable_array_add: true,
           disable_array_delete: true,
         },
-        items:{
-          type: "string",
-          title: "Ссылки на starbound wiki:",
-          links:[
-            {
-              rel: "Data",
-              class: "wikilink",
-              href: "{{self}}"
+        patternProperties:{
+          "^.+$":{
+            type: "array",
+            format: "table",
+            options:{
+              collapsed: true,
+              disable_array_add: true,
+              disable_array_delete: true,
+            },
+            items:{
+              options:{
+                collapsed: true,
+                disable_array_add: true,
+                disable_array_delete: true,
+              },
+              type: "string",
+              title: "Путь внутри json",
+              format: "url"
             }
-          ]
+          }
         }
       },
     }
@@ -132,7 +137,8 @@ function load_part(editor, start)
     subeditor.setValue(editor.json[i])
     editor.subeditors[i] = subeditor
   }
-  $.each($("#"+ realholderid + " input[type=url]"), function(i,d){d.disabled=true})
+  $.each($("#"+ realholderid + " input[type=url]"), function(i,d)
+    {d.style.width = '500px'; d.readOnly=true})
   $.each($("#"+ realholderid + " [name$=\"[Eng]\"]"), function(i,d){d.readOnly=true})
   $.each($("#"+ realholderid + " textarea[name$=\"]\"]"),
     function(i,d){
@@ -142,19 +148,20 @@ function load_part(editor, start)
         d.rows = Math.ceil(d.value.length/27)
       }
     })
-  $.each($("#"+ realholderid + ' input[name^="root[Files]"]'),
+  $.each($("#"+ realholderid + ' div[data-schemapath^="root.Files."]'),
     function(i,c){
-      var d = c.parentNode
-      var o = d.parentNode
-      d.style.visibility="hidden";
-      d.style.height="0px";
-      d.disabled=true
-      $.each(o.getElementsByClassName("wikilink"),
+      console.log("Found")
+      console.log(c)
+      var path = c.getAttribute('data-schemapath').substring("root.Files.".length)
+      pathhref = path.split('/').pop().split('.')[0]
+      $.each( c.getElementsByTagName('button'), function(a,t)
+        {
+          t.style.display = 'none'
+        })
+      $.each(c.getElementsByTagName('h3'),
         function(a, t){
-          var link = t.href
-          var dataname = link.split("/").pop().split(".")[0]
-          t.href = "http://starbounder.org/Data:" + dataname
-          t.text = link.slice(link.indexOf("assets"))
+          t.innerHTML = "<a href='http://starbounder.org/Data:" + pathhref +
+            "' target='_blank'>" + path + "</a>"
         })
     })
 }
