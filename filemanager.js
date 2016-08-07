@@ -1,7 +1,7 @@
 
 const filetreeid = 'fmtree'
 const api_prefix = "https://api.github.com/repos/SBT-community"+
-  "/Starbound_RU/contents/translations"
+  "/Starbound_RU/contents/translations/texts"
 const branch = "web-interface"
 
 function prepare_fm(holder)
@@ -33,7 +33,7 @@ const svg_template = "<svg aria-hidden=\"true\" class=\"octicon\" " +
 "height=\"16\" version=\"1.1\" viewBox=\"0 0 14 16\" width=\"14\">"
 
 
-function add_file(table, name, type, on_click, progress)
+function add_file(table, name, type, on_click)
 {
   var row = table.insertRow()
   var img = row.insertCell()
@@ -50,21 +50,21 @@ function add_file(table, name, type, on_click, progress)
   var link = row.insertCell()
   link.className = "container"
   var completion = row.insertCell()
-  if (progress > 0)
-  {
-    var complindicator = document.createElement('div')
-    var complframe = document.createElement('div')
-    complframe.style["margin-bottom"] = 0
-    complframe.className = 'progress'
-    complindicator.className = 'progress-bar progress-bar-success'
-    complindicator.setAttribute('role', 'progressbar')
-    complindicator.setAttribute('aria-valuemin', 0)
-    complindicator.setAttribute('aria-valuemax', 100)
-    complindicator.setAttribute('aria-valuenow', progress)
-    complindicator.style.width =  progress + '%'
-    complframe.appendChild(complindicator)
-    completion.appendChild(complframe)
-  }
+
+  var complindicator = document.createElement('div')
+  var complframe = document.createElement('div')
+  complframe.style["margin-bottom"] = 0
+  complframe.className = 'progress'
+  complindicator.className = 'progress-bar progress-bar-success'
+  complindicator.id = "progress-" + name
+  complindicator.setAttribute('role', 'progressbar')
+  complindicator.setAttribute('aria-valuemin', 0)
+  complindicator.setAttribute('aria-valuemax', 100)
+  complindicator.setAttribute('aria-valuenow', 0)
+  complindicator.style.width =  "0%"
+  complframe.appendChild(complindicator)
+  completion.appendChild(complframe)
+
   completion.className = 'container'
 
   var thelink = document.createElement('a')
@@ -74,6 +74,7 @@ function add_file(table, name, type, on_click, progress)
   row.onclick = on_click
 
   link.appendChild(thelink)
+  return complindicator.id
 }
 
 
@@ -117,13 +118,35 @@ function update_tree(file_json, on_file, path)
     {
       if (e.size >= 1024000)
       {return}
-      add_file(table, e.name, e.type, function()
+      pbid = add_file(table, e.name, e.type, function()
         {
           goto_path(e.url, on_file)
-        }, 50)
+        })
+      theStatusUpdater.postMessage({name: "getstatus",
+        id: pbid,
+        path: e.path})
     })
 }
 
+function get_translation_status(preworker)
+{
+  if (preworker == null)
+  {
+    preworker = new Worker('progress_updater.js')
+  }
+
+  prefix = "https://rawgit.com/SBT-community/Starbound_RU/web-interface/"+
+    "translations/"
+  $.getJSON(prefix + "totallabels.json",
+    function(json){
+      preworker.postMessage({name: "totalupdate", json: json})
+    })
+  $.getJSON(prefix + "translatedlabels.json",
+    function(json){
+      preworker.postMessage({name: "translatedupdate", json: json})
+    })
+  return preworker
+}
 
 
 function goto_path(path, on_file)
@@ -137,4 +160,21 @@ function goto_path(path, on_file)
 function goto_home( on_file)
 {
   goto_path(api_prefix + "?ref=" + branch, on_file)
+}
+
+theStatusUpdater = get_translation_status()
+theStatusUpdater.onmessage = function(msg)
+{
+  switch (msg.data.name)
+  {
+    case "setstatus":
+      var obj = document.getElementById(msg.data.id)
+      obj.style.width = msg.data.val + '%'
+      obj.setAttribute('aria-valuenow', msg.data.val)
+      obj.innerHTML = Math.ceil(msg.data.val) + '%'
+      console.log('Message from worker: ')
+      break;
+    default:
+      break;
+  }
 }
