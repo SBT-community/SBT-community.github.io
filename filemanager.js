@@ -157,9 +157,11 @@ function goto_path(path, on_file)
     })
 }
 
-function goto_home( on_file)
+function goto_home(on_file)
 {
   goto_path(api_prefix + "?ref=" + branch, on_file)
+  theStatusUpdater.postMessage({name: 'getstatus',
+    id: 'global-progress', path: 'translations/'})
 }
 
 theStatusUpdater = get_translation_status()
@@ -171,7 +173,7 @@ theStatusUpdater.onmessage = function(msg)
       var obj = document.getElementById(msg.data.id)
       obj.style.width = msg.data.val + '%'
       obj.setAttribute('aria-valuenow', msg.data.val)
-      obj.innerHTML = Math.floor(msg.data.val) + '%'
+      obj.innerHTML = Math.floor(msg.data.val) + '% переведено'
       if (msg.data.val < 50)
       {
         obj.className = 'progress-bar progress-bar-danger'

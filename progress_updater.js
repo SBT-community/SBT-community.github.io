@@ -1,6 +1,7 @@
 
-totalfiles = {}
-translatedfiles = {}
+var totalfiles = {}
+var translatedfiles = {}
+var loaded = {total: false, tr: false}
 
 pathregex = /\/?([^\/]+)\/(.+)/
 
@@ -20,6 +21,10 @@ function sum_up(counter)
 
 function get_by_path(obj, path)
 {
+  if (path.length == 0)
+  {
+    return obj
+  }
   var ans = path.match(pathregex)
   if (ans == null)
   {
@@ -47,7 +52,6 @@ function handle_status(data)
   var path = data.path.substring("translations/".length)
   var trs = sum_up(get_by_path(translatedfiles, path))
   var value = trs * 100 / sum_up(get_by_path(totalfiles, path))
-  //console.log(value)
   postMessage({name: "setstatus", id: data.id, val: value})
 
 }
@@ -58,12 +62,14 @@ onmessage = function(msg)
   {
     case "totalupdate":
       totalfiles = msg.data.json
+      loaded.total = true
       break;
     case "translatedupdate":
       translatedfiles = msg.data.json
+      loaded.tr = true
       break;
     case "getstatus":
-      waitfor(function(){return (totalfiles !== {} && translatedfiles !== {})},
+      waitfor(function(){return (loaded.total && loaded.tr)},
         handle_status, msg.data)
       break;
     default:
