@@ -92,17 +92,16 @@ function make_editor(holder)
   navigator.id = navbarid
   navigator.className = 'pagination'
   navigator.style["z-index"] = 10
+  navigator.style.top = 0
   holder.appendChild(navigator)
   holder.appendChild(realholder)
-  let totop = $('#' + navbarid).offset().top
   document.addEventListener('scroll', function()
     {
-      if ($(window).scrollTop() > totop)
+      if ($(window).scrollTop() > $('#' + navbarid).offset().top - 20)
       {
-        navigator.style.top = 0
         navigator.style.position = "fixed"
       }
-      else
+      else if ($(window).scrollTop() < 60)
       {
         navigator.style.position = "relative"
       }
