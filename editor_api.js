@@ -232,7 +232,7 @@ function open_json(editor, content)
 
 function load_json(editor,url)
 {
-  $.getJSON(url, function(data){
+  getJSON(authdata, url, function(data){
     json_onload(editor, data)
   })
 }

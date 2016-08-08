@@ -27,7 +27,7 @@ function access_by_path(obj, path, newval)
     return obj
   }
   var ans = path.match(pathregex)
-  if (ans == null)
+  if (!Array.isArray(ans))
   {
     if (typeof newval == "number")
     {
@@ -37,7 +37,7 @@ function access_by_path(obj, path, newval)
   }
   var cur = ans[1]
   var tail = ans[2]
-  return get_by_path(obj[cur], tail, newval)
+  return access_by_path(obj[cur], tail, newval)
 }
 
 function get_by_path(obj, path)
@@ -47,10 +47,14 @@ function set_translated(obj, path, n)
 {
   path = path.substring("translations/".length)
   oldvalue = access_by_path(obj, path)
-  if (oldvalue != n)
+  if (oldvalue !== n)
   {
     access_by_path(obj, path, n)
-    postMessage({name: "updatetranslated", json: obj})
+    postMessage({name: "updatetranslated", needed: true, json: obj})
+  }
+  else
+  {
+    postMessage({name: "updatetranslated", needed: false})
   }
 }
 
@@ -75,7 +79,7 @@ onmessage = function(msg)
     case "getstatus":
       handle_status( msg.data)
       break;
-    case "settranslated":
+    case "updatetranslated":
       set_translated(translatedfiles, msg.data.path, msg.data.value)
       break;
     default:

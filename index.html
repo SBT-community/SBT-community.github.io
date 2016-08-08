@@ -10,8 +10,10 @@
   <script type="text/javascript" src="https://rawgit.com/jdorn/json-editor/master/dist/jsoneditor.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <script src="https://rawgit.com/dankogai/js-base64/master/base64.min.js"></script>
+  <script src="githubapi.js"></script>
   <script src="editor_api.js"></script>
   <script src="filemanager.js"></script>
+  <script src="worker_manager.js"></script>
   <script type="text/javascript">
     JSONEditor.defaults.options.theme = 'bootstrap3';
     JSONEditor.defaults.options.disable_array_delete_all_rows = true;
@@ -44,40 +46,15 @@
     }
 
     function unlogin(){
-        var date = new Date();
-        document.cookie = "sbtghsword=;expires=" + date.toUTCString() +
-          ";domain=" + document.domain
-        document.cookie = "sbtghuser=;expires=" + date.toUTCString() +
-          ";domain=" + document.domain
-      }
-
-    function check_authdata()
-    {
-      unlogin()
       document.getElementById('authorized').style.display = ''
-      $.ajax({
-        url: "https://api.github.com/user",
-        type: 'GET',
-        beforeSend: function (xhr) {
-          xhr.setRequestHeader ("Authorization", "Basic " +
-            btoa(authdata.uname + ":" + authdata.upass));
-        },
-        data: {},
-        success: function(user_data)
-        {
-          authdata.email = user_data.email
-          var date = new Date()
-          date.setMonth(date.getMonth() + 1)
-          document.cookie = "sbtghuser=" + authdata.uname +
-            ";domain=" + document.domain + ';expires='+ date.toUTCString()
-          document.cookie = "sbtghsword=" + authdata.upass +
-            ";domain=" + document.domain + ';expires='+ date.toUTCString()
-          show_authdata(user_data)
-        }
-      })
+      var date = new Date();
+      document.cookie = "sbtghsword=;expires=" + date.toUTCString() +
+        ";domain=" + document.domain
+      document.cookie = "sbtghuser=;expires=" + date.toUTCString() +
+        ";domain=" + document.domain
     }
 
-    function show_authdata(udata)
+    function show_userdata(udata)
     {
       var authinfo = document.getElementById('authorized')
       authinfo.style.display = ''
@@ -117,17 +94,23 @@
       return matches ? decodeURIComponent(matches[1]) : "";
     }
 
-    function login()
+    function login(data)
     {
-      var data = $('#auth-form').serializeArray().reduce(
-        function(obj, item) {
-          obj[item.name] = item.value;
-          return obj;
-        }, {});
-      authdata = data
-      check_authdata()
+      unlogin()
+      check_authdata(data, function(user_data)
+        {
+          data.email = user_data.email
+          authdata = data
+          var date = new Date()
+          date.setMonth(date.getMonth() + 1)
+          document.cookie = "sbtghuser=" + data.uname +
+            ";domain=" + document.domain + ';expires='+ date.toUTCString()
+          document.cookie = "sbtghsword=" + data.upass +
+            ";domain=" + document.domain + ';expires='+ date.toUTCString()
+          show_userdata(user_data)
+        },
+        function(){$('#auth-failed').slideDown()})
       $('#auth-form').slideUp()
-      $('#authorized').slideDown()
     }
 
     function get_authdata()
@@ -139,34 +122,6 @@
       return {uname : uname, upass: upass}
     }
 
-    function do_commit(msg, path, content, on_fail, on_success)
-    {
-      var commit_body = {
-            message: msg,
-            path: path,
-            content: Base64.encode(content),
-            sha: editor.filedata.sha,
-            branch: "web-interface",
-          }
-        if (authdata.email)
-        {
-          commit_body.author = {name: authdata.uname, email: authdata.email}
-          commit_body.commiter = {name: authdata.uname, email: authdata.email}
-        }
-        jQuery.ajax({
-          url: editor.filedata.url.split('?')[0],
-          type: 'PUT',
-          contentType: 'application/json',
-          beforeSend: function (xhr) {
-            xhr.setRequestHeader ("Authorization", "Basic " +
-              btoa(authdata.uname + ":" + authdata.upass));
-          },
-          data: JSON.stringify(commit_body),
-          success: on_success,
-          error: on_fail,
-      })
-    }
-
     function commit()
     {
       var obj = get_json(editor)
@@ -174,42 +129,56 @@
       for (i in obj)
       {
         var field = obj[i]
-        console.log(field)
-        console.log (typeof field['Texts']['Rus'])
         if (typeof field['Texts']['Rus'] == "string" &&
           field['Texts']['Rus'].length > 0)
         {
           translated++
         }
       }
-      theStatusUpdater.then(function(w){
-        w.postMessage({name: "settranslated", path: editor.filedata.path,
-          value: translated})
-      })
 
-      var content = JSON.stringify(obj, null, '  ')
+      var content = JSON.stringify(obj, null, 2)
 
       if (!authdata.uname)
       {return}
-
       var messagetext = $('#commitMessageText')[0].value
       if (messagetext.length == 0)
       {messagetext = 'Обновление ' + editor.filedata.path}
 
+      var tree = []
+      tree.push(make_tree_entry(editor.filedata.path, content))
+
       function on_success(d, s, r)
       {
+        $('#commitWait').slideUp()
         $('#commitMessageText')[0].value = ""
         $('#commitSuccess').slideDown().delay(2000).slideUp()
       }
       function on_fail(d, status, errorThrown)
       {
-        $('#commitErrorText')[0].innerHTML = "<strong>Ошибка!</strong> При попытке " +
+        $('#commitWait').slideUp()
+        console.log(d)
+        console.log(status)
+        console.log(errorThrown)
+        $('#commitFailedText')[0].innerHTML = "<strong>Ошибка!</strong> При попытке " +
           "сохранения изменений произошла ошибка: " +
           (errorThrown ? errorThrown: "неизвестная ошибка" ) + " статус: " +
           (status ? status: "неизвестен" )
-        $('#commitError').slideDown().delay(10000).slideUp()
+        $('#commitFailed').slideDown().delay(10000).slideUp()
       }
-      do_commit(messagetext, editor.filedata.path, content, on_fail, on_success)
+      var callback_index = add_event_callback(theStatusUpdater, "updatetranslated",
+      function(data)
+      {
+        if (data.needed)
+        {
+          tree.push(make_tree_entry("translations/translatedlabels.json", JSON.stringify(data.json, null, 2)))
+        }
+        $('#commitProgress')[0].style.width = '0%'
+        $('#commitWait').slideDown()
+        do_commit(authdata, messagetext, tree, on_fail, on_success)
+        remove_event_callback(theStatusUpdater, callback_index)
+      })
+      theStatusUpdater.worker.postMessage(
+        {name: "updatetranslated", value: translated, path: editor.filedata.path})
     }
 
     function on_file(json)
@@ -220,6 +189,22 @@
       $("#fmnavigation").slideUp()
       open_json(editor, Base64.decode(json.content))
       editor.filedata = json
+    }
+
+    function statusUpdateHandler(data)
+    {
+      var obj = document.getElementById(data.id)
+      obj.style.width = data.val + '%'
+      obj.setAttribute('aria-valuenow', data.val)
+      obj.innerHTML = Math.floor(data.val) + '% переведено'
+      if (data.val < 50)
+      {
+        obj.className = 'progress-bar progress-bar-danger'
+      }
+      else if (data.val < 100)
+      {
+        obj.className = 'progress-bar progress-bar-warning'
+      }
     }
   </script>
 </head>
@@ -256,17 +241,19 @@
   <button class="btn btn-default"
       onclick="$('html, body').stop().animate({scrollTop: 0}, 1000)"
       type="button">Наверх</button>
-
-  <div id='authorized' style='display: none'>Авторизация не удалась!
+  <div id='authorized' style='display: none'></div>
+  <div id='auth-failed' style='display: none'>Авторизация не удалась!
   <div><button class="btn btn-default" type="button"
-    onclick="$('#authorized').slideUp(); $('#auth-form').slideDown()">
+    onclick="$('#auth-failed').slideUp(); $('#auth-form').slideDown()">
     Попробовать снова</button></div></div>
   <form id="auth-form" style="display: none">
     Имя пользователя:
     <input type='text' class='form-control' name='uname'>
     Пароль:
     <input type='password' class='form-control' name='upass'>
-    <button class="btn btn-success" onclick="login()" type="button">Вход</button>
+    <button class="btn btn-success"
+    onclick="login($('#auth-form').serializeArray().reduce(function(o, i)
+    {o[i.name] = i.value;return o;}, {}));" type="button">Вход</button>
   </form>
 
   </div><!--navigation -->
@@ -274,17 +261,26 @@
   <div id='content' class='col-sm-8'>
   <!-- Alerts-->
   <div class="alert alert-success fade in" id='commitSuccess'
-  style='display:none'>
+  style='display:none; position:fixed; z-index:11'>
   <a href='#' class="close" onclick='$("#commitSuccess").slideUp()'>&times;</a>
   <strong>Успех!</strong> Ваши изменения успешно сохранены!
   </div>
+  <div class="alert" id='commitWait'
+  style='display:none; position:fixed; z-index:11'>
+  <div class="progress">
+    <div class="progress-bar bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+      style='width: 0%' id='commitProgress'>
+      <p>Подождите, идет сохранение...</p>
+    </div>
+  </div>
+  </div>
   <div class="alert alert-danger fade in" id='commitFailed'
-  style='display:none'>
+  style='display:none; position:fixed; z-index:11'>
   <a href='#' class="close" onclick='$("#commitFailed").slideUp()'>&times;</a>
   <p id='commitFailedText'></p>
   </div>
   <div class="alert alert-danger fade in" id='loginRequiredAlert'
-  style='display:none'>
+  style='display:none; position:fixed; z-index:11'>
   <a href='#' class="close" onclick='$("#loginRequiredAlert").slideUp()'>&times;</a>
   <strong>Ошибка!</strong> Чтобы сохранить изменения нужно войти.
   </div>
@@ -324,6 +320,7 @@
 
   <script type="text/javascript">
     var authdata = {}
+    var theStatusUpdater = {}
     $(document).ready(function()
     {
       // Initialization
@@ -339,8 +336,11 @@
       }
       else
       {
-        check_authdata()
+        login(authdata)
       }
+
+      theStatusUpdater = get_worker(authdata)
+      add_event_callback(theStatusUpdater, "setstatus", statusUpdateHandler)
 
       var args = get_call_arguments()
       if (!args.code)
@@ -363,8 +363,9 @@
           "Actually you shouldn't see that message.")
       }
       goto_home(on_file)
+      theStatusUpdater.promise.then(function(w){ w.postMessage({name: 'getstatus',
+        id: 'global-progress', path: 'translations/'})})
     })
-
   </script>
 </body>
 </html>
