@@ -114,6 +114,12 @@ function update_tree(file_json, on_file, path)
         goto_path(prev_path, on_file)
       })
   }
+  function make_pb_request(pbid, path)
+  {
+    return function(w){ w.postMessage({name: "getstatus",
+          id: pbid,
+          path: path})}
+  }
   $.each(file_json, function(i, e)
     {
       if (e.size >= 1024000)
@@ -122,32 +128,9 @@ function update_tree(file_json, on_file, path)
         {
           goto_path(e.url, on_file)
         })
-      theStatusUpdater.postMessage({name: "getstatus",
-        id: pbid,
-        path: e.path})
+      theStatusUpdater.then(make_pb_request(pbid, e.path))
     })
 }
-
-function get_translation_status(preworker)
-{
-  if (preworker == null)
-  {
-    preworker = new Worker('progress_updater.js')
-  }
-
-  prefix = "https://rawgit.com/SBT-community/Starbound_RU/web-interface/"+
-    "translations/"
-  $.getJSON(prefix + "totallabels.json",
-    function(json){
-      preworker.postMessage({name: "totalupdate", json: json})
-    })
-  $.getJSON(prefix + "translatedlabels.json",
-    function(json){
-      preworker.postMessage({name: "translatedupdate", json: json})
-    })
-  return preworker
-}
-
 
 function goto_path(path, on_file)
 {
@@ -160,12 +143,47 @@ function goto_path(path, on_file)
 function goto_home(on_file)
 {
   goto_path(api_prefix + "?ref=" + branch, on_file)
-  theStatusUpdater.postMessage({name: 'getstatus',
-    id: 'global-progress', path: 'translations/'})
+  theStatusUpdater.then(function(w){ w.postMessage({name: 'getstatus',
+    id: 'global-progress', path: 'translations/'})})
 }
 
-theStatusUpdater = get_translation_status()
-theStatusUpdater.onmessage = function(msg)
+function get_translation_status(msgHandler, preworker)
+{
+  var result = new Promise(function (ok, fail)
+  {
+    if (preworker == null)
+    {
+      preworker = new Worker('progress_updater.js')
+    }
+    preworker.onmessage = msgHandler
+    prefix = "https://rawgit.com/SBT-community/Starbound_RU/web-interface/"+
+      "translations/"
+    totprom = new Promise(function (got, oops)
+    {
+      $.getJSON(prefix + "totallabels.json",
+      function(json){
+        preworker.postMessage({name: "totalupdate", json: json})
+        got()
+      })
+    })
+    trprom = new Promise(function (got, oops)
+    {
+      $.getJSON(prefix + "translatedlabels.json",
+      function(json){
+        preworker.postMessage({name: "translatedupdate", json: json})
+        got()
+      })
+    })
+    Promise.all([totprom, trprom]).then(function()
+    {
+      console.log("Now should be loaded");
+      ok(preworker)
+    })
+  })
+  return result
+}
+
+function statusUpdaterHandler(msg)
 {
   switch (msg.data.name)
   {
@@ -187,3 +205,5 @@ theStatusUpdater.onmessage = function(msg)
       break;
   }
 }
+
+theStatusUpdater = get_translation_status(statusUpdaterHandler)

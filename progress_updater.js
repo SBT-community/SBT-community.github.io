@@ -1,7 +1,6 @@
 
 var totalfiles = {}
 var translatedfiles = {}
-var loaded = {total: false, tr: false}
 
 pathregex = /\/?([^\/]+)\/(.+)/
 
@@ -35,25 +34,12 @@ function get_by_path(obj, path)
   return get_by_path(obj[cur], tail)
 }
 
-function waitfor(test, action, param)
-{
-  if (! test())
-  {
-    setTimeout(function(){waitfor(test, action,param)}, 100)
-  }
-  else
-  {
-    action(param)
-  }
-}
-
 function handle_status(data)
 {
   var path = data.path.substring("translations/".length)
   var trs = sum_up(get_by_path(translatedfiles, path))
   var value = trs * 100 / sum_up(get_by_path(totalfiles, path))
   postMessage({name: "setstatus", id: data.id, val: value})
-
 }
 
 onmessage = function(msg)
@@ -62,15 +48,12 @@ onmessage = function(msg)
   {
     case "totalupdate":
       totalfiles = msg.data.json
-      loaded.total = true
       break;
     case "translatedupdate":
       translatedfiles = msg.data.json
-      loaded.tr = true
       break;
     case "getstatus":
-      waitfor(function(){return (loaded.total && loaded.tr)},
-        handle_status, msg.data)
+      handle_status( msg.data)
       break;
     default:
       break;
