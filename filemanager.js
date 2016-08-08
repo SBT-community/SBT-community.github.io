@@ -143,43 +143,51 @@ function goto_path(path, on_file)
 function goto_home(on_file)
 {
   goto_path(api_prefix + "?ref=" + branch, on_file)
-  theStatusUpdater.then(function(w){ w.postMessage({name: 'getstatus',
-    id: 'global-progress', path: 'translations/'})})
 }
 
 function get_translation_status(msgHandler, preworker)
 {
+  if (preworker == null)
+  {
+    preworker = new Worker('progress_updater.js')
+  }
+  var thedate = new Date()
   var result = new Promise(function (ok, fail)
   {
-    if (preworker == null)
-    {
-      preworker = new Worker('progress_updater.js')
-    }
     preworker.onmessage = msgHandler
-    prefix = "https://rawgit.com/SBT-community/Starbound_RU/web-interface/"+
-      "translations/"
+    prefix = "https://api.github.com/repos/SBT-community/Starbound_RU/contents"+
+      "/translations/"
+    postfix = "?ref=web-interface&current_time=" + thedate.getTime()
     totprom = new Promise(function (got, oops)
     {
-      $.getJSON(prefix + "totallabels.json",
-      function(json){
+      $.getJSON(prefix + "totallabels.json"+postfix,
+      function(prp_json){
+        var json = $.parseJSON(Base64.decode(prp_json.content))
         preworker.postMessage({name: "totalupdate", json: json})
         got()
       })
     })
     trprom = new Promise(function (got, oops)
     {
-      $.getJSON(prefix + "translatedlabels.json",
-      function(json){
+      $.getJSON(prefix + "translatedlabels.json"+postfix,
+      function(prp_json){
+        var json = $.parseJSON(Base64.decode(prp_json.content))
         preworker.postMessage({name: "translatedupdate", json: json})
         got()
       })
     })
     Promise.all([totprom, trprom]).then(function()
     {
-      console.log("Now should be loaded");
       ok(preworker)
     })
   })
+
+  result.then(function(w){ w.postMessage({name: 'getstatus',
+    id: 'global-progress', path: 'translations/'})})
+  setTimeout(function()
+  {
+    theStatusUpdater = get_translation_status(preworker, statusUpdaterHandler)
+  }, 5 * 60000)
   return result
 }
 
@@ -200,6 +208,16 @@ function statusUpdaterHandler(msg)
       {
         obj.className = 'progress-bar progress-bar-warning'
       }
+      break;
+    case "updatetranslated":
+      var content = JSON.stringify(msg.data.json,  null, '  ')
+      do_commit("Updated translated status", '/translations/translatedlabels.json',
+        content)
+      setTimeout(function()
+      {
+        theStatusUpdater.then(function(w){
+          theStatusUpdater = get_translation_status(w, statusUpdaterHandler)})
+      }, 10000)
       break;
     default:
       break;

@@ -149,8 +149,6 @@ function load_part(editor, start)
     })
   $.each($("#"+ realholderid + ' div[data-schemapath^="root.Files."]'),
     function(i,c){
-      console.log("Found")
-      console.log(c)
       var path = c.getAttribute('data-schemapath').substring("root.Files.".length)
       pathhref = path.split('/').pop().split('.')[0]
       $.each( c.getElementsByTagName('button'), function(a,t)
@@ -177,8 +175,6 @@ function get_json(editor)
 function json_onload(editor, data)
 {
   editor.json = []
-  //console.log(editor.json)
-  //var page = 1
   var navbar = document.getElementById(navbarid)
   navbar.innerHTML = ""
   var page = 1

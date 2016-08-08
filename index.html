@@ -7,7 +7,7 @@
   <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" id="theme_stylesheet">
   <title>Интерфейс переводчика</title>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-  <script type="text/javascript" src="https://rawgithub.com/jdorn/json-editor/master/dist/jsoneditor.min.js"></script>
+  <script type="text/javascript" src="https://rawgit.com/jdorn/json-editor/master/dist/jsoneditor.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <script src="https://rawgit.com/dankogai/js-base64/master/base64.min.js"></script>
   <script src="editor_api.js"></script>
@@ -138,6 +138,89 @@
       var upass = getCookie('sbtghsword')
       return {uname : uname, upass: upass}
     }
+
+    function do_commit(msg, path, content, on_fail, on_success)
+    {
+      var commit_body = {
+            message: msg,
+            path: path,
+            content: Base64.encode(content),
+            sha: editor.filedata.sha,
+            branch: "web-interface",
+          }
+        if (authdata.email)
+        {
+          commit_body.author = {name: authdata.uname, email: authdata.email}
+          commit_body.commiter = {name: authdata.uname, email: authdata.email}
+        }
+        jQuery.ajax({
+          url: editor.filedata.url.split('?')[0],
+          type: 'PUT',
+          contentType: 'application/json',
+          beforeSend: function (xhr) {
+            xhr.setRequestHeader ("Authorization", "Basic " +
+              btoa(authdata.uname + ":" + authdata.upass));
+          },
+          data: JSON.stringify(commit_body),
+          success: on_success,
+          error: on_fail,
+      })
+    }
+
+    function commit()
+    {
+      var obj = get_json(editor)
+      var translated = 0
+      for (i in obj)
+      {
+        var field = obj[i]
+        console.log(field)
+        console.log (typeof field['Texts']['Rus'])
+        if (typeof field['Texts']['Rus'] == "string" &&
+          field['Texts']['Rus'].length > 0)
+        {
+          translated++
+        }
+      }
+      theStatusUpdater.then(function(w){
+        w.postMessage({name: "settranslated", path: editor.filedata.path,
+          value: translated})
+      })
+
+      var content = JSON.stringify(obj, null, '  ')
+
+      if (!authdata.uname)
+      {return}
+
+      var messagetext = $('#commitMessageText')[0].value
+      if (messagetext.length == 0)
+      {messagetext = 'Обновление ' + editor.filedata.path}
+
+      function on_success(d, s, r)
+      {
+        $('#commitMessageText')[0].value = ""
+        $('#commitSuccess').slideDown().delay(2000).slideUp()
+      }
+      function on_fail(d, status, errorThrown)
+      {
+        $('#commitErrorText')[0].innerHTML = "<strong>Ошибка!</strong> При попытке " +
+          "сохранения изменений произошла ошибка: " +
+          (errorThrown ? errorThrown: "неизвестная ошибка" ) + " статус: " +
+          (status ? status: "неизвестен" )
+        $('#commitError').slideDown().delay(10000).slideUp()
+      }
+      do_commit(messagetext, editor.filedata.path, content, on_fail, on_success)
+    }
+
+    function on_file(json)
+    {
+      $("#editor-holder").slideDown()
+      $("#file-browser").slideUp()
+      $("#editor-navigation").slideDown()
+      $("#fmnavigation").slideUp()
+      open_json(editor, Base64.decode(json.content))
+      editor.filedata = json
+    }
   </script>
 </head>
 <body>
@@ -240,103 +323,47 @@
   </div><!--/Commit modal -->
 
   <script type="text/javascript">
-    // Initialization
-    editor_holder = document.getElementById("editor-holder")
-    editor = make_editor(editor_holder)
-
-    prepare_fm(document.getElementById("file-browser"))
-
-    var authdata = get_authdata()
-    if (authdata == false)
+    var authdata = {}
+    $(document).ready(function()
     {
-      document.getElementById('auth-form').style.display = ''
-    }
-    else
-    {
-      check_authdata()
-    }
+      // Initialization
+      editor_holder = document.getElementById("editor-holder")
+      editor = make_editor(editor_holder)
 
-    var args = get_call_arguments()
-    if (!args.code)
-    {
-      var authbutton = document.getElementById("login-button")
-      //authbutton.style.display = ""//Will be commented until oauth wont be implemented
-      var state = Math.random().toString(36).substring(7);
-      var href_part = "https://github.com/login/oauth/authorize?" +
-          "client_id=9e609aef5d6e71a4ed63&" +
-          "redirect_url=\\\"https://sbt-community.github.io/\\\"&" +
-          "state=" + state
-      authbutton.onclick = function(){
-        location.href = href_part
-      }
-    }
-    else
-    {
-      alert("Autorization token received but no client secret provided."+
-        "It's not your fault, just a signal about forbidden type of authorization." +
-        "Actually you shouldn't see that message. Do you used some hackery?")
-    }
+      prepare_fm(document.getElementById("file-browser"))
 
-
-    function commit()
-    {
-      var content = JSON.stringify(get_json(editor), null, '  ')
-      if (!authdata.uname)
-      {return}
-
-      var messagetext = $('#commitMessageText')[0].value
-      if (messagetext.length == 0)
-      {messagetext = 'Обновление ' + editor.filedata.path}
-
-      var commit_body = {
-          message: messagetext,
-          path: editor.filedata.path,
-          content: Base64.encode(content),
-          sha: editor.filedata.sha,
-          branch: "web-interface",
-        }
-      if (authdata.email)
+      authdata = get_authdata()
+      if (authdata == false)
       {
-        commit_body.author = {name: authdata.uname, email: authdata.email}
-        commit_body.commiter = {name: authdata.uname, email: authdata.email}
+        document.getElementById('auth-form').style.display = ''
+      }
+      else
+      {
+        check_authdata()
       }
 
-      jQuery.ajax({
-        url: editor.filedata.url.split('?')[0],
-        type: 'PUT',
-        contentType: 'application/json',
-        beforeSend: function (xhr) {
-          xhr.setRequestHeader ("Authorization", "Basic " +
-            btoa(authdata.uname + ":" + authdata.upass));
-        },
-        data: JSON.stringify(commit_body),
-        success: function(d, s, r)
-        {
-          $('#commitMessageText')[0].value = ""
-          $('#commitSuccess').slideDown().delay(2000).slideUp()
-        },
-        error: function(d, status, errorThrown)
-        {
-          $('#commitErrorText')[0].innerHTML = "<strong>Ошибка!</strong> При попытке " +
-            "сохранения изменений произошла ошибка: " +
-            (errorThrown ? errorThrown: "неизвестная ошибка" ) + " статус: " +
-            (status ? status: "неизвестен" )
-          $('#commitError').slideDown().delay(10000).slideUp()
-        },
+      var args = get_call_arguments()
+      if (!args.code)
+      {
+        var authbutton = document.getElementById("login-button")
+        //authbutton.style.display = ""//Will be commented until oauth wont be implemented
+        var state = Math.random().toString(36).substring(7);
+        var href_part = "https://github.com/login/oauth/authorize?" +
+            "client_id=9e609aef5d6e71a4ed63&" +
+            "redirect_url=\\\"https://sbt-community.github.io/\\\"&" +
+            "state=" + state
+        authbutton.onclick = function(){
+          location.href = href_part
+        }
+      }
+      else
+      {
+        alert("Autorization token received but no client secret provided."+
+          "It's not your fault, just a signal about forbidden type of authorization." +
+          "Actually you shouldn't see that message.")
+      }
+      goto_home(on_file)
     })
-    }
-
-    function on_file(json)
-    {
-      $("#editor-holder").slideDown()
-      $("#file-browser").slideUp()
-      $("#editor-navigation").slideDown()
-      $("#fmnavigation").slideUp()
-      console.log(json.download_url)
-      open_json(editor, Base64.decode(json.content))
-      editor.filedata = json
-    }
-    goto_home(on_file)
 
   </script>
 </body>
