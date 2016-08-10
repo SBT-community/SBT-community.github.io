@@ -86,26 +86,6 @@ const schema = {
 
 function make_editor(holder)
 {
-  var realholder = document.createElement('div')
-  realholder.id = realholderid
-  var navigator = document.createElement('ul')
-  navigator.id = navbarid
-  navigator.className = 'pagination'
-  navigator.style["z-index"] = 10
-  navigator.style.top = 0
-  holder.appendChild(navigator)
-  holder.appendChild(realholder)
-  document.addEventListener('scroll', function()
-    {
-      if ($(window).scrollTop() > $('#' + navbarid).offset().top - 20)
-      {
-        navigator.style.position = "fixed"
-      }
-      else if ($(window).scrollTop() < 60)
-      {
-        navigator.style.position = "relative"
-      }
-    })
   return {filedata: {}, json: {}, subeditors: {}}
 }
 
