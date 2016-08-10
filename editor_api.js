@@ -60,7 +60,6 @@ const schema = {
         patternProperties:{
           "^.+$":{
             type: "array",
-            format: "table",
             options:{
               collapsed: true,
               disable_array_add: true,
@@ -98,6 +97,7 @@ theEditor.prototype.load_part = function (start)
   this.subeditors = {}
   var holder = document.getElementById(this.holderid)
   holder.innerHTML = ""
+  var to_highlight = []
   for (var i=start;i<this.json.length && i<start+editors_per_page;i+=1)
   {
     var fixed_schema = schema
@@ -114,35 +114,44 @@ theEditor.prototype.load_part = function (start)
     {
       fixed_schema.schema.options.collapsed = false
     }
+    if (this.json[i]['Texts']['Rus'] === "")
+    {
+      to_highlight.push(titletext)
+    }
     fixed_schema.schema.title = titletext
     var subeditor = new JSONEditor(holder, fixed_schema)
     subeditor.setValue(this.json[i])
     this.subeditors[i] = subeditor
   }
-  $.each($("#"+ this.holderid + " input[type=url]"), function(i,d)
-    {d.style.width = '500px'; d.readOnly=true})
-  $.each($("#"+ this.holderid + " [name$=\"[Eng]\"]"), function(i,d){d.readOnly=true})
-  $.each($("#"+ this.holderid + " textarea[name$=\"]\"]"),
-    function(i,d){
+
+  $('div[data-schemapath="root"] h3 span').each(function(i, s){
+    if (to_highlight.indexOf(s.innerHTML) >= 0)
+    {
+      s.style.color = 'red'
+    }
+  })
+
+  $("#"+ this.holderid + " [name$=\"[Eng]\"]").each(function(i,d){d.readOnly=true})
+  $("#"+ this.holderid + " textarea[name$=\"]\"]").each(function(i,d){
       d.className = 'input-lg form-control'
       if (d.value.length != 0)
       {
         d.rows = Math.ceil(d.value.length/27)
       }
     })
-  $.each($("#"+ this.holderid + ' div[data-schemapath^="root.Files."]'),
-    function(i,c){
-      var path = c.getAttribute('data-schemapath').substring("root.Files.".length)
+  $("#"+ this.holderid + ' div[data-schemapath^="root.Files."]').each(function(i,c){
+      let prefix_len = "root.Files.".length
+      let path = $(c).attr('data-schemapath').substring(prefix_len)
       pathhref = path.split('/').pop().split('.')[0]
-      $.each( c.getElementsByTagName('button'), function(a,t)
-        {
-          t.style.display = 'none'
-        })
-      $.each(c.getElementsByTagName('h3'),
-        function(a, t){
-          t.innerHTML = "<a href='http://starbounder.org/Data:" + pathhref +
-            "' target='_blank'>" + path + "</a>"
-        })
+      $(c).find('button').hide()
+      $(c).find('[data-schemapath^="root.Files.' + path + '."]').each(function(i,p)
+      {
+        let internal_path = $(p).find('input')[0].value
+        $(p).parent().append('<p>' + internal_path + '</p>')
+        $(p).hide()
+      })
+      $(c).find('h3').replaceWith("<a href='http://starbounder.org/Data:" +
+        pathhref + "' target='_blank'>" + path + "</a>")
     })
 }
 
