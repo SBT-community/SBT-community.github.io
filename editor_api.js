@@ -9,6 +9,21 @@ const schema = {
     type: "object",
     format: "table",
     properties: {
+      "DeniedAlternatives":{
+        type: "array",
+        format: "table",
+        title: "Отброшенные варианты перевода",
+        options:{
+          disable_array_add: false,
+          disable_array_delete: false,
+          collapsed: true
+        },
+        items: {
+          title: "Вариант",
+          format: "text",
+          type: "string",
+        }
+      },
       "Texts":{
         title: "Тексты",
         options:{
@@ -33,21 +48,6 @@ const schema = {
         },
         default_properties: ["Rus", "Eng"]
       },//Texts
-      "DeniedAlternatives":{
-        type: "array",
-        format: "table",
-        title: "Отброшенные варианты перевода",
-        options:{
-          disable_array_add: false,
-          disable_array_delete: false,
-          collapsed: true
-        },
-        items: {
-          title: "Вариант",
-          format: "text",
-          type: "string",
-        }
-      },
       "Files":{
         type: "object",
         title: "Используется в:",
