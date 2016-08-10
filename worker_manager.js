@@ -42,7 +42,7 @@ function get_translation_status(msgHandlerList, authdata, preworker)
 
 function refresh_worker(w)
 {
-  w.promise = get_translation_status(w.handlers, authdata,
+  w.promise = get_translation_status(w.handlers, w.authdata,
     w.worker)
 }
 
@@ -55,7 +55,7 @@ function get_worker(authdata, initialHandlers)
   if (Array.isArray(initialHandlers))
     {theworker.handlers = theworker.handlers.concat(initialHandlers)}
   refresh_worker(theworker)
-  setPeriodic(true, authdata)
+  setPeriodic(true, theworker)
   return theworker
 }
 
