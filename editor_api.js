@@ -157,11 +157,12 @@ theEditor.prototype.load_part = function (start)
 
 theEditor.prototype.get_json = function ()
 {
+  var thejson = this.json
   $.each(this.subeditors, function(i, s)
   {
-    this.json[i] = s.getValue()
+    thejson[i] = s.getValue()
   })
-  return this.json
+  return thejson
 }
 
 theEditor.prototype.json_onload = function (data)
