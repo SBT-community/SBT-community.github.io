@@ -298,7 +298,7 @@
   </div>
   <div id="editor-holder" style="display: none">
   <ul id='editor-navigator' class='pagination' ></ul>
-  <div id='real-holder-for-editors'></div>
+  <div id='editor-holder-body'></div>
   </div>
   </div><!--content -->
   <div id='right-placeholder' class='col-sm-1' ></div>
@@ -332,7 +332,7 @@
   <script type="text/javascript">
     var authdata = {}
     var theStatusUpdater = {}
-    var editor = new theEditor("editor-holder", "editor-navigator")
+    var editor = new theEditor("editor-holder-body", "editor-navigator")
     console.log(editor)
     $(document).ready(function()
     {
