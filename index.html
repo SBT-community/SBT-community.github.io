@@ -146,7 +146,11 @@
 
       var tree = []
       tree.push(make_tree_entry(editor.filedata.path, content))
-
+      function on_progress(progress)
+      {
+        $('#commitProgress')[0].style.width = progress + '%'
+        $('#commitProgress')[0].setAttribute('aria-valuenow', progress)
+      }
       function on_success(d, s, r)
       {
         $('#commitWait').slideUp()
@@ -174,7 +178,7 @@
         }
         $('#commitProgress')[0].style.width = '0%'
         $('#commitWait').slideDown()
-        do_commit(authdata, messagetext, tree, on_fail, on_success)
+        do_commit(authdata, messagetext, tree, on_fail, on_success, on_progress)
         remove_event_callback(theStatusUpdater, callback_index)
       })
       theStatusUpdater.worker.postMessage(

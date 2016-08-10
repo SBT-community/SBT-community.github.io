@@ -67,7 +67,7 @@ function make_tree_blob(string_content)
   })
 }
 
-function do_commit(authdata, msg, filetree, on_fail, on_success)
+function do_commit(authdata, msg, filetree, on_fail, on_success, on_progress)
 {
   var prefix = "https://api.github.com/repos/SBT-community/Starbound_RU"
   getJSON(authdata,
@@ -79,7 +79,7 @@ function do_commit(authdata, msg, filetree, on_fail, on_success)
         base_tree: branch_json.commit.commit.tree.sha,
         tree: filetree
       }
-      $('#commitProgress')[0].style.width = '25%'
+      on_progress(25)
       $.ajax({
         url: prefix + "/git/trees",
         type: "POST",
@@ -99,7 +99,7 @@ function do_commit(authdata, msg, filetree, on_fail, on_success)
             commit_body.author = {name: authdata.uname, email: authdata.email}
             commit_body.commiter = {name: authdata.uname, email: authdata.email}
           }
-          $('#commitProgress')[0].style.width = '50%'
+          on_progress(50)
           $.ajax({
             url: prefix + "/git/commits",
             type: "POST",
@@ -109,14 +109,14 @@ function do_commit(authdata, msg, filetree, on_fail, on_success)
             error: on_fail,
             success: function(commit_json)
             {
-              $('#commitProgress')[0].style.width = '75%'
+              on_progress(75)
               $.ajax({
                 type: "PATCH",
                 url: prefix + "/git/refs/heads/web-interface",
                 contentType: 'application/json',
                 beforeSend: function(xhr) {setAuthData(xhr,authdata)},
                 data: JSON.stringify({sha:commit_json.sha}),
-                success: function(q){$('#commitProgress')[0].style.width = '100%'; on_success(q)},
+                success: function(q){on_progress(100); on_success(q)},
                 error: on_fail
               })
             
