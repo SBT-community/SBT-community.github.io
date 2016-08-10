@@ -1,6 +1,5 @@
 
-const realholderid = 'real-holder-for-editors'
-const navbarid = 'editor-navigator'
+
 const editors_per_page = 25
 const schema = {
   schema : {
@@ -84,42 +83,46 @@ const schema = {
   }
 }
 
-function make_editor(holder)
+function theEditor(holder, navigator)
 {
-  return {filedata: {}, json: {}, subeditors: {}}
+  this.holderid = holder
+  this.navbarid = navigator
+  this.filedata = {}
+  this.json = {}
+  this.subeditors = {}
 }
 
 
-function load_part(editor, start)
+theEditor.prototype.load_part = function (start)
 {
-  editor.subeditors = {}
-  var holder = document.getElementById(realholderid)
+  this.subeditors = {}
+  var holder = document.getElementById(this.holderid)
   holder.innerHTML = ""
-  for (var i=start;i<editor.json.length && i<start+editors_per_page;i+=1)
+  for (var i=start;i<this.json.length && i<start+editors_per_page;i+=1)
   {
     var fixed_schema = schema
-    var titletext = editor.json[i]['Texts']['Eng']
-    if (! ('Rus' in editor.json[i]['Texts']))
+    var titletext = this.json[i]['Texts']['Eng']
+    if (! ('Rus' in this.json[i]['Texts']))
     {
-      editor.json[i]['Texts']['Rus'] = ""
+      this.json[i]['Texts']['Rus'] = ""
     }
     if (titletext.length > 16)
     {
       titletext = titletext.slice(0, 16) + "..."
     }
-    if (editor.json.length-start < 2)
+    if (this.json.length-start < 2)
     {
       fixed_schema.schema.options.collapsed = false
     }
     fixed_schema.schema.title = titletext
     var subeditor = new JSONEditor(holder, fixed_schema)
-    subeditor.setValue(editor.json[i])
-    editor.subeditors[i] = subeditor
+    subeditor.setValue(this.json[i])
+    this.subeditors[i] = subeditor
   }
-  $.each($("#"+ realholderid + " input[type=url]"), function(i,d)
+  $.each($("#"+ this.holderid + " input[type=url]"), function(i,d)
     {d.style.width = '500px'; d.readOnly=true})
-  $.each($("#"+ realholderid + " [name$=\"[Eng]\"]"), function(i,d){d.readOnly=true})
-  $.each($("#"+ realholderid + " textarea[name$=\"]\"]"),
+  $.each($("#"+ this.holderid + " [name$=\"[Eng]\"]"), function(i,d){d.readOnly=true})
+  $.each($("#"+ this.holderid + " textarea[name$=\"]\"]"),
     function(i,d){
       d.className = 'input-lg form-control'
       if (d.value.length != 0)
@@ -127,7 +130,7 @@ function load_part(editor, start)
         d.rows = Math.ceil(d.value.length/27)
       }
     })
-  $.each($("#"+ realholderid + ' div[data-schemapath^="root.Files."]'),
+  $.each($("#"+ this.holderid + ' div[data-schemapath^="root.Files."]'),
     function(i,c){
       var path = c.getAttribute('data-schemapath').substring("root.Files.".length)
       pathhref = path.split('/').pop().split('.')[0]
@@ -143,34 +146,34 @@ function load_part(editor, start)
     })
 }
 
-function get_json(editor)
+theEditor.prototype.get_json = function ()
 {
-  $.each(editor.subeditors, function(i, s)
+  $.each(this.subeditors, function(i, s)
   {
-    editor.json[i] = s.getValue()
+    this.json[i] = s.getValue()
   })
-  return editor.json
+  return this.json
 }
 
-function json_onload(editor, data)
+theEditor.prototype.json_onload = function (data)
 {
-  editor.json = []
-  var navbar = document.getElementById(navbarid)
+  this.json = []
+  var navbar = document.getElementById(this.navbarid)
   navbar.innerHTML = ""
   var page = 1
 
   function get_onclick(start)
   {
     return (function(){
-      $.each(editor.subeditors, function(n, e){
-        editor.json[n] = e.getValue()
+      $.each(this.subeditors, function(n, e){
+        this.json[n] = e.getValue()
         e.destroy()
       })
-      $.each(document.getElementById(navbarid).childNodes, function(i, c){
+      $.each(document.getElementById(this.navbarid).childNodes, function(i, c){
         c.className = ""
       }) 
       document.getElementById('navbarel-' + start).className = 'active'
-      load_part(editor, start)
+      this.load_part(start)
     })
   }
 
@@ -184,35 +187,35 @@ function json_onload(editor, data)
     navbutton.onclick = get_onclick(i)
     navelement.appendChild(navbutton)
     navbar.appendChild(navelement)
-    editor.json = editor.json.concat(data.slice(i, i+editors_per_page))
+    this.json = this.json.concat(data.slice(i, i+editors_per_page))
     page += 1
   }
   document.getElementById('navbarel-0').className = 'active'
-  load_part(editor, 0)
+  this.load_part(0)
 }
 
 
-function reset(editor)
+theEditor.prototype.reset = function ()
 {
-  document.getElementById(navbarid).innerHTML = ""
-  document.getElementById(realholderid).innerHTML = ""
-  $.each(editor.subeditors, function(n, e){
+  document.getElementById(this.navbarid).innerHTML = ""
+  document.getElementById(this.holderid).innerHTML = ""
+  $.each(this.subeditors, function(n, e){
       e.destroy()
     })
-  editor.subeditors = {}
-  editor.json = {}
-  editor.filedata = {}
+  this.subeditors = {}
+  this.json = {}
+  this.filedata = {}
 }
 
-function open_json(editor, content)
+theEditor.prototype.open_json = function (content)
 {
   data = $.parseJSON(content)
-  json_onload(editor, data)
+  this.json_onload(data)
 }
 
-function load_json(editor,url)
+theEditor.prototype.load_json = function (url)
 {
   getJSON(authdata, url, function(data){
-    json_onload(editor, data)
+    this.json_onload(data)
   })
 }

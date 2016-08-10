@@ -30,7 +30,7 @@
       $("#editor-navigation").slideUp()
       $("#file-browser").slideDown()
       $("#fmnavigation").slideDown()
-      reset(editor)
+      editor.reset()
     }
 
     function get_call_arguments()
@@ -124,7 +124,7 @@
 
     function commit()
     {
-      var obj = get_json(editor)
+      var obj = editor.get_json()
       var translated = 0
       for (i in obj)
       {
@@ -196,7 +196,7 @@
       $("#file-browser").slideUp()
       $("#editor-navigation").slideDown()
       $("#fmnavigation").slideUp()
-      open_json(editor, Base64.decode(json.content))
+      editor.open_json(Base64.decode(json.content))
       editor.filedata = json
     }
 
@@ -332,11 +332,11 @@
   <script type="text/javascript">
     var authdata = {}
     var theStatusUpdater = {}
+    var editor = new theEditor("editor-holder", "editor-navigator")
+    console.log(editor)
     $(document).ready(function()
     {
       // Initialization
-      editor_holder = document.getElementById("editor-holder")
-      editor = make_editor(editor_holder)
 
       prepare_fm(document.getElementById("file-browser"))
 
