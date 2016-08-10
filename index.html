@@ -156,6 +156,11 @@
         $('#commitWait').slideUp()
         $('#commitMessageText')[0].value = ""
         $('#commitSuccess').slideDown().delay(2000).slideUp()
+        theStatusUpdater.worker.postMessage({
+            name: "getstatus",
+            path: editor.filedata.path,
+            id: "progress-" + editor.filedata.name
+          })
       }
       function on_fail(d, status, errorThrown)
       {
