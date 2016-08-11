@@ -10,12 +10,13 @@ function setAuthData(xhr, authdata)
   }
 }
 
-function GHAccount(authdata, repo)
+function GHAccount(authdata, repo, branch)
 {
   this.authdata = authdata
   this.targetrepo = repo
   this.remotehead = ""
   this.localhead = ""
+  this.branch = branch
 }
 
 GHAccount.prototype.check_authdata = function (authdata, on_success, on_fail)
@@ -94,7 +95,7 @@ GHAccount.prototype.do_commit = function (msg, filetree, on_fail,
   var prefix = api_prefix + this.get_repo_suffix()
   let authdata = this.authdata
   var acc = this
-  this.getJSON(this.get_repo_suffix() + "branches/web-interface",
+  this.getJSON(this.get_repo_suffix() + "branches/" + this.branch,
     function(branch_json)
     {
       var commit_sha = branch_json.commit.sha
@@ -141,7 +142,7 @@ GHAccount.prototype.do_commit = function (msg, filetree, on_fail,
               on_progress(75)
               $.ajax({
                 type: "PATCH",
-                url: prefix + "git/refs/heads/web-interface",
+                url: prefix + "git/refs/heads/" + acc.branch,
                 contentType: 'application/json',
                 beforeSend: function(xhr) {setAuthData(xhr,authdata)},
                 data: JSON.stringify({sha:commit_json.sha}),

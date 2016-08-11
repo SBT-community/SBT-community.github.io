@@ -348,7 +348,8 @@
 
       prepare_fm(document.getElementById("file-browser"))
       var authdata = get_authdata()
-      var account = new GHAccount(authdata, "SBT-community/Starbound_RU")
+      var account = new GHAccount(authdata, "SBT-community/Starbound_RU",
+        'web-interface')
       if (authdata == false)
       {
         document.getElementById('auth-form').style.display = ''

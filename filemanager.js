@@ -133,7 +133,8 @@ function update_tree(account, file_json, on_file, path)
 
 function goto_path(account, path, on_file)
 {
-  account.getJSON(account.get_repo_suffix() + "contents" + path,
+  account.getJSON(account.get_repo_suffix() + "contents" + path + '?ref=' +
+    account.branch,
     function(json){
       update_tree(account, json, on_file, path)
     })
@@ -141,7 +142,7 @@ function goto_path(account, path, on_file)
 
 function goto_home(account, on_file)
 {
-  goto_path(account, path_prefix + "?ref=" + branch, on_file)
+  goto_path(account, path_prefix, on_file)
 }
 
 
