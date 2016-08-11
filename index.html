@@ -245,6 +245,11 @@
     <button class="btn btn-default" onclick='$("#loginRequiredAlert").slideDown()'
     type="button" id='commitButton'>Сохранить</button>
     <button class="btn btn-default" onclick="backtofm();" type="button">Назад</button>
+    <button class="btn btn-default"
+    onclick="$('#editor-holder div[data-schemapath=root]').children('h3')
+    .find('button.json-editor-btn-collapse').click();"
+    type="button">
+      [Раз/С]вернуть всё</button>
   </div>
 
   <button class="btn btn-default"
