@@ -24,30 +24,6 @@ const schema = {
           type: "string",
         }
       },
-      "Texts":{
-        title: "Тексты",
-        options:{
-          disable_collapse: true,
-          required: true
-        },
-        type: "object",
-        properties: {
-          "Eng":{
-            type: "string",
-            title: "Английский текст",
-            format: "textarea",
-          },
-          "Rus": {
-            type: "string",
-            title: "Русский текст",
-            format: "textarea",
-            options:{
-              required: true
-            },
-          }
-        },
-        default_properties: ["Rus", "Eng"]
-      },//Texts
       "Files":{
         type: "object",
         title: "Используется в:",
@@ -78,6 +54,30 @@ const schema = {
           }
         }
       },
+      "Texts":{
+        title: "Тексты",
+        options:{
+          disable_collapse: true,
+          required: true
+        },
+        type: "object",
+        properties: {
+          "Eng":{
+            type: "string",
+            title: "Английский текст",
+            format: "textarea",
+          },
+          "Rus": {
+            type: "string",
+            title: "Русский текст",
+            format: "textarea",
+            options:{
+              required: true
+            },
+          }
+        },
+        default_properties: ["Rus", "Eng"]
+      },//Texts
     }
   }
 }
