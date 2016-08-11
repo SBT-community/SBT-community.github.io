@@ -97,11 +97,11 @@ function check_codex_length(text, after_check)
     {rows++}
     else
     {
-      cols += splited[s].length + 1
+      cols += splited[s].length
     }
-    if (cols > width)
+    if (cols > width && splited[s] != ' ')
     {
-      cols = splited[s].length + 1
+      cols = splited[s].length
       rows++
     }
   }
