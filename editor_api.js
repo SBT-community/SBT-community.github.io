@@ -114,23 +114,15 @@ theEditor.prototype.load_part = function (start)
     {
       fixed_schema.schema.options.collapsed = false
     }
-    if (this.json[i]['Texts']['Rus'] === "")
-    {
-      to_highlight.push(titletext)
-    }
     fixed_schema.schema.title = titletext
     var subeditor = new JSONEditor(holder, fixed_schema)
     subeditor.setValue(this.json[i])
     this.subeditors[i] = subeditor
-  }
-
-  $('div[data-schemapath="root"] h3 span').each(function(i, s){
-    if (to_highlight.indexOf(s.innerHTML) >= 0)
+    if (this.json[i]['Texts']['Rus'] === "")
     {
-      s.style.color = 'red'
+      subeditor.root_container.className += ' alert-info'
     }
-  })
-
+  }
   $("#"+ this.holderid + " [name$=\"[Eng]\"]").each(function(i,d){d.readOnly=true})
   $("#"+ this.holderid + " textarea[name$=\"]\"]").each(function(i,d){
       d.className = 'input-lg form-control'
