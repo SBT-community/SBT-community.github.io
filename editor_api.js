@@ -171,19 +171,19 @@ theEditor.prototype.json_onload = function (data)
   var navbar = document.getElementById(this.navbarid)
   navbar.innerHTML = ""
   var page = 1
-
+  var editor = this
   function get_onclick(start)
   {
     return (function(){
-      $.each(this.subeditors, function(n, e){
-        this.json[n] = e.getValue()
+      $.each(editor.subeditors, function(n, e){
+        editor.json[n] = e.getValue()
         e.destroy()
       })
-      $.each(document.getElementById(this.navbarid).childNodes, function(i, c){
+      $.each(document.getElementById(editor.navbarid).childNodes, function(i, c){
         c.className = ""
       }) 
       document.getElementById('navbarel-' + start).className = 'active'
-      this.load_part(start)
+      editor.load_part(start)
     })
   }
 
