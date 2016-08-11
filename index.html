@@ -125,6 +125,7 @@
 
     function commit()
     {
+      refresh_worker(theStatusUpdater)
       var obj = editor.get_json()
       var translated = 0
       for (i in obj)
@@ -166,13 +167,14 @@
       function on_fail(d, status, errorThrown)
       {
         $('#commitWait').slideUp()
-        console.log(d)
+        console.log(JSON.stringify(d, null, 2))
         console.log(status)
         console.log(errorThrown)
         $('#commitFailedText')[0].innerHTML = "<strong>Ошибка!</strong> При попытке " +
           "сохранения изменений произошла ошибка: " +
           (errorThrown ? errorThrown: "неизвестная ошибка" ) + " статус: " +
-          (status ? status: "неизвестен" )
+          (status ? status: "неизвестен" ) + ". Дополнительная информация:\n" +
+          JSON.stringify(d, null, 2)
         $('#commitFailed').slideDown().delay(10000).slideUp()
       }
       var callback_index = add_event_callback(theStatusUpdater, "updatetranslated",
@@ -187,8 +189,11 @@
         do_commit(authdata, messagetext, tree, on_fail, on_success, on_progress)
         remove_event_callback(theStatusUpdater, callback_index)
       })
-      theStatusUpdater.worker.postMessage(
-        {name: "updatetranslated", value: translated, path: editor.filedata.path})
+      theStatusUpdater.promise.then(function(w)
+      {
+        w.postMessage(
+          {name: "updatetranslated", value: translated, path: editor.filedata.path})
+      })
     }
 
     function on_file(json)
