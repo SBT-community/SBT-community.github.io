@@ -219,6 +219,7 @@ theEditor.prototype.json_onload = function (data)
   var navbar = document.getElementById(this.navbarid)
   navbar.innerHTML = ""
   var page = 1
+  $('#current-filename').text(this.filedata.name)
   var editor = this
   function get_onclick(start)
   {
@@ -257,6 +258,7 @@ theEditor.prototype.reset = function ()
 {
   document.getElementById(this.navbarid).innerHTML = ""
   document.getElementById(this.holderid).innerHTML = ""
+  $('#current-filename').text('')
   $.each(this.subeditors, function(n, e){
       e.destroy()
     })

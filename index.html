@@ -197,8 +197,8 @@
       $("#file-browser").slideUp()
       $("#editor-navigation").slideDown()
       $("#fmnavigation").slideUp()
-      editor.open_json(Base64.decode(json.content))
       editor.filedata = json
+      editor.open_json(Base64.decode(json.content))
     }
 
     function statusUpdateHandler(data)
@@ -303,6 +303,7 @@
   <div id="file-browser">
   </div>
   <div id="editor-holder" style="display: none">
+  <h3 id='current-filename'></h3>
   <ul id='editor-navigator' class='pagination' ></ul>
   <div id='editor-holder-body'></div>
   </div>
