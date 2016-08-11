@@ -24,9 +24,8 @@
     JSONEditor.defaults.options.disable_edit_json = true;
     JSONEditor.defaults.options.object_layout = 'grid';
 
-    function backtofm()
+    function backtofm(editor)
     {
-      editor_holder = document.getElementById("editor-holder")
       $("#editor-holder").slideUp()
       $("#editor-navigation").slideUp()
       $("#file-browser").slideDown()
@@ -55,7 +54,7 @@
         ";domain=" + document.domain
     }
 
-    function show_userdata(udata)
+    function show_userdata(authdata, udata)
     {
       var authinfo = document.getElementById('authorized')
       authinfo.style.display = ''
@@ -82,10 +81,10 @@
       authinfo.appendChild(idiv)
       authinfo.appendChild(ebutdiv)
       $('#loginRequiredAlert').slideUp()
-      $('#commitButton')[0].className = 'btn btn-success'
+      $('#commitButton').addClass('btn-success')
       $('#commitButton')[0].onclick = null
-      $('#commitButton')[0].setAttribute('data-target', '#commitMessage')
-      $('#commitButton')[0].setAttribute('data-toggle', 'modal')
+      $('#commitButton').attr('data-target', '#commitMessage')
+      $('#commitButton').attr('data-toggle', 'modal')
     }
 
     function getCookie(name) {
@@ -95,23 +94,23 @@
       return matches ? decodeURIComponent(matches[1]) : "";
     }
 
-    function login(data)
+    function login(account, data)
     {
       unlogin()
-      check_authdata(data, function(user_data)
+      account.check_authdata(data, function(user_data)
         {
           data.email = user_data.email
-          authdata = data
           var date = new Date()
           date.setMonth(date.getMonth() + 1)
           document.cookie = "sbtghuser=" + data.uname +
             ";domain=" + document.domain + ';expires='+ date.toUTCString()
           document.cookie = "sbtghsword=" + data.upass +
             ";domain=" + document.domain + ';expires='+ date.toUTCString()
-          show_userdata(user_data)
+          show_userdata(data, user_data)
         },
         function(){$('#auth-failed').slideDown()})
       $('#auth-form').slideUp()
+      return account
     }
 
     function get_authdata()
@@ -123,8 +122,9 @@
       return {uname : uname, upass: upass}
     }
 
-    function commit()
+    function commit(account, editor)
     {
+      console.log('commit')
       refresh_worker(theStatusUpdater)
       var obj = editor.get_json()
       var translated = 0
@@ -139,8 +139,7 @@
       }
 
       var content = JSON.stringify(obj, null, 2)
-
-      if (!authdata.uname)
+      if (!account.authdata.uname)
       {return}
       var messagetext = $('#commitMessageText')[0].value
       if (messagetext.length == 0)
@@ -186,7 +185,7 @@
         }
         $('#commitProgress')[0].style.width = '0%'
         $('#commitWait').slideDown()
-        do_commit(authdata, messagetext, tree, on_fail, on_success, on_progress)
+        account.do_commit(messagetext, tree, on_fail, on_success, on_progress)
         remove_event_callback(theStatusUpdater, callback_index)
       })
       theStatusUpdater.promise.then(function(w)
@@ -194,16 +193,6 @@
         w.postMessage(
           {name: "updatetranslated", value: translated, path: editor.filedata.path})
       })
-    }
-
-    function on_file(json)
-    {
-      $("#editor-holder").slideDown()
-      $("#file-browser").slideUp()
-      $("#editor-navigation").slideDown()
-      $("#fmnavigation").slideUp()
-      editor.filedata = json
-      editor.open_json(Base64.decode(json.content))
     }
 
     function statusUpdateHandler(data)
@@ -244,13 +233,13 @@
   <div id="fmnavigation">
     <button class="btn btn-default" id="login-button" style="display:none"
       type="button">Войти</button>
-    <button class="btn btn-default" onclick="backtofm();goto_home(on_file)"
+    <button class="btn btn-default" id='gohome'
       type="button">Домой</button>
   </div>
   <div id="editor-navigation"  style="display: none">
     <button class="btn btn-default" onclick='$("#loginRequiredAlert").slideDown()'
     type="button" id='commitButton'>Сохранить</button>
-    <button class="btn btn-default" onclick="backtofm();" type="button">Назад</button>
+    <button class="btn btn-default" id='backtofm' type="button">Назад</button>
     <button class="btn btn-default"
     onclick="$('#editor-holder div[data-schemapath=root]').children('h3')
     .find('button.json-editor-btn-collapse').click();"
@@ -272,8 +261,7 @@
     Пароль:
     <input type='password' class='form-control' name='upass'>
     <button class="btn btn-success"
-    onclick="login($('#auth-form').serializeArray().reduce(function(o, i)
-    {o[i.name] = i.value;return o;}, {}));" type="button">Вход</button>
+    id="do-login" type="button">Вход</button>
   </form>
 
   </div><!--navigation -->
@@ -332,7 +320,7 @@
     <textarea class='form-control input-lg' id='commitMessageText' rows='8'></textarea>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-success" onclick='commit()'
+    <button type="button" class="btn btn-success" id='perform-commit'
     data-dismiss="modal">
     Сохранить</button>
     <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
@@ -342,26 +330,35 @@
   </div><!--/Commit modal -->
 
   <script type="text/javascript">
-    var authdata = {}
     var theStatusUpdater = {}
-    var editor = new theEditor("editor-holder-body", "editor-navigator")
     $(document).ready(function()
     {
       // Initialization
+      var editor = new theEditor("editor-holder-body", "editor-navigator")
+
+      function on_file(json)
+      {
+        $("#editor-holder").slideDown()
+        $("#file-browser").slideUp()
+        $("#editor-navigation").slideDown()
+        $("#fmnavigation").slideUp()
+        editor.filedata = json
+        editor.open_json(Base64.decode(json.content))
+      }
 
       prepare_fm(document.getElementById("file-browser"))
-
-      authdata = get_authdata()
+      var authdata = get_authdata()
+      var account = new GHAccount(authdata, "SBT-community/Starbound_RU")
       if (authdata == false)
       {
         document.getElementById('auth-form').style.display = ''
       }
       else
       {
-        login(authdata)
+        login(account,authdata)
       }
 
-      theStatusUpdater = get_worker(authdata)
+      theStatusUpdater = get_worker(account)
       add_event_callback(theStatusUpdater, "setstatus", statusUpdateHandler)
 
       var args = get_call_arguments()
@@ -384,7 +381,18 @@
           "It's not your fault, just a signal about forbidden type of authorization." +
           "Actually you shouldn't see that message.")
       }
-      goto_home(on_file)
+      $('#perform-commit').on('click', function(){commit(account, editor)})
+      $('#backtofm').on('click', function(){backtofm(editor);})
+      $('#gohome').on('click', function(){backtofm(editor);goto_home(account, on_file)})
+      $('#do-login').on('click', function()
+      {
+        login(account, $('#auth-form').serializeArray().reduce(function(o, i)
+          {
+            o[i.name] = i.value;
+            return o;
+          }, {}))
+      })
+      goto_home(account, on_file)
       theStatusUpdater.promise.then(function(w){ w.postMessage({name: 'getstatus',
         id: 'global-progress', path: 'translations/'})})
     })

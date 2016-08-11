@@ -1,5 +1,5 @@
 
-function get_translation_status(msgHandlerList, authdata, preworker)
+function get_translation_status(msgHandlerList, account, preworker)
 {
   var thedate = new Date()
   var result = new Promise(function (ok, fail)
@@ -11,12 +11,12 @@ function get_translation_status(msgHandlerList, authdata, preworker)
         if (msgHandlerList[h](msg)) {break}
       }
     }
-    prefix = "https://api.github.com/repos/SBT-community/Starbound_RU/contents"+
+    prefix = "repos/SBT-community/Starbound_RU/contents"+
       "/translations/"
     postfix = "?ref=web-interface&current_time=" + thedate.getTime()
     totprom = new Promise(function (got, oops)
     {
-      getJSON(authdata, prefix + "totallabels.json"+postfix,
+      account.getJSON(prefix + "totallabels.json"+postfix,
       function(prp_json){
         var json = $.parseJSON(Base64.decode(prp_json.content))
         preworker.postMessage({name: "totalupdate", json: json})
@@ -25,7 +25,7 @@ function get_translation_status(msgHandlerList, authdata, preworker)
     })
     trprom = new Promise(function (got, oops)
     {
-      getJSON(authdata, prefix + "translatedlabels.json"+postfix,
+      account.getJSON(prefix + "translatedlabels.json"+postfix,
       function(prp_json){
         var json = $.parseJSON(Base64.decode(prp_json.content))
         preworker.postMessage({name: "translatedupdate", json: json})
@@ -42,15 +42,15 @@ function get_translation_status(msgHandlerList, authdata, preworker)
 
 function refresh_worker(w)
 {
-  w.promise = get_translation_status(w.handlers, w.authdata,
+  w.promise = get_translation_status(w.handlers, w.account,
     w.worker)
 }
 
-function get_worker(authdata, initialHandlers)
+function get_worker(account, initialHandlers)
 {
   var theworker = {}
   theworker.worker = new Worker('progress_updater.js')
-  theworker.authdata = authdata
+  theworker.account = account
   theworker.handlers = []
   if (Array.isArray(initialHandlers))
     {theworker.handlers = theworker.handlers.concat(initialHandlers)}

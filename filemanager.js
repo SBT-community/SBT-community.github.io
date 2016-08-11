@@ -1,7 +1,6 @@
 
 const filetreeid = 'fmtree'
-const api_prefix = "https://api.github.com/repos/SBT-community"+
-  "/Starbound_RU/contents/translations/texts"
+const path_prefix = "/translations/texts"
 const branch = "web-interface"
 
 function prepare_fm(holder)
@@ -88,7 +87,7 @@ function track(path)
   newcell.appendChild(link)
 }
 
-function update_tree(file_json, on_file, path)
+function update_tree(account, file_json, on_file, path)
 {
   var table = document.getElementById(filetreeid)
   if (!($.isArray(file_json)))
@@ -101,7 +100,7 @@ function update_tree(file_json, on_file, path)
       b.innerHTML = ""
     })
   var offset = path.lastIndexOf("/")
-  if (offset >= api_prefix.length - 1)
+  if (offset >= path_prefix.length - 1)
   {
     var prev_path = path.slice(0,offset)
     offset = path.lastIndexOf("?")
@@ -111,7 +110,7 @@ function update_tree(file_json, on_file, path)
     }
     add_file(table, "..", "dir",function()
       {
-        goto_path(prev_path, on_file)
+        goto_path(account, prev_path, on_file)
       })
   }
   function make_pb_request(pbid, path)
@@ -126,23 +125,23 @@ function update_tree(file_json, on_file, path)
       {return}
       pbid = add_file(table, e.name, e.type, function()
         {
-          goto_path(e.url, on_file)
+          goto_path(account, e.path, on_file)
         })
       theStatusUpdater.promise.then(make_pb_request(pbid, e.path))
     })
 }
 
-function goto_path(path, on_file)
+function goto_path(account, path, on_file)
 {
-  getJSON(authdata, path,
+  account.getJSON(account.get_repo_suffix() + "contents" + path,
     function(json){
-      update_tree(json, on_file, path)
+      update_tree(account, json, on_file, path)
     })
 }
 
-function goto_home(on_file)
+function goto_home(account, on_file)
 {
-  goto_path(api_prefix + "?ref=" + branch, on_file)
+  goto_path(account, path_prefix + "?ref=" + branch, on_file)
 }
 
 
