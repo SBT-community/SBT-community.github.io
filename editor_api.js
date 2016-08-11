@@ -82,6 +82,32 @@ const schema = {
   }
 }
 
+function check_codex_length(text, after_check)
+{
+  const width = 36
+  const height = 15
+  var rows = 0
+  var cols = 0
+  var splited = text.split(/([^\t\s\n\r]+|\r?\n)/)
+  for (s in splited)
+  {
+    if (splited[s].length == 0)
+    {continue}
+    else if(splited[s] == '\n')
+    {rows++}
+    else
+    {
+      cols += splited[s].length + 1
+    }
+    if (cols > width)
+    {
+      cols = splited[s].length + 1
+      rows++
+    }
+  }
+  after_check(rows-height)
+}
+
 function theEditor(holder, navigator)
 {
   this.holderid = holder
@@ -118,6 +144,36 @@ theEditor.prototype.load_part = function (start)
     var subeditor = new JSONEditor(holder, fixed_schema)
     subeditor.setValue(this.json[i])
     this.subeditors[i] = subeditor
+    function generate_codex_checker(ed, ii)
+    {
+      function after_check(diff)
+      {
+        $(ed.subeditors[ii].getEditor('root.Texts.Rus').container)
+          .find('#overflow-warning').remove()
+        $(ed.subeditors[ii].root_container).find('#overflow-head').remove()
+        if (diff > 0)
+        {
+          $(ed.subeditors[ii].root_container).addClass('alert-danger')
+          $(ed.subeditors[ii].getEditor('root.Texts.Rus').container)
+            .append('<p id="overflow-warning">Текст длиннее окна кодекса!' +
+            ' Лишних строк: '+ diff +'!</p>')
+          $(ed.subeditors[ii].root_container).children('h3')
+          .append('<span id="overflow-head">Слишком длинный текст!</span>')
+        }
+        else
+        {
+          $(ed.subeditors[ii].root_container).removeClass('alert-danger')
+        }
+      }
+      return function()
+      {
+        var curval = ed.subeditors[ii].getEditor('root.Texts.Rus').getValue()
+        check_codex_length(curval, after_check)
+      }
+    }
+    ccheck = generate_codex_checker(this, i)
+    ccheck()
+    subeditor.watch('root.Texts.Rus', ccheck)
     if (this.json[i]['Texts']['Rus'] === "")
     {
       subeditor.root_container.className += ' alert-info'
