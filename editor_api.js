@@ -115,6 +115,7 @@ function theEditor(holder, navigator)
   this.filedata = {}
   this.json = {}
   this.subeditors = {}
+  this.touched = false
 }
 
 
@@ -123,6 +124,7 @@ theEditor.prototype.load_part = function (start)
   this.subeditors = {}
   var holder = document.getElementById(this.holderid)
   holder.innerHTML = ""
+  var ed = this
   var to_highlight = []
   for (var i=start;i<this.json.length && i<start+editors_per_page;i+=1)
   {
@@ -144,7 +146,7 @@ theEditor.prototype.load_part = function (start)
     var subeditor = new JSONEditor(holder, fixed_schema)
     subeditor.setValue(this.json[i])
     this.subeditors[i] = subeditor
-    function generate_codex_checker(ed, ii)
+    function generate_codex_checker(ii)
     {
       function after_check(diff)
       {
@@ -171,9 +173,9 @@ theEditor.prototype.load_part = function (start)
         check_codex_length(curval, after_check)
       }
     }
-    ccheck = generate_codex_checker(this, i)
+    ccheck = generate_codex_checker(i)
     ccheck()
-    subeditor.watch('root.Texts.Rus', ccheck)
+    subeditor.watch('root.Texts.Rus', function(){ed.touched = true; ccheck()})
     if (this.json[i]['Texts']['Rus'] === "")
     {
       subeditor.root_container.className += ' alert-info'
