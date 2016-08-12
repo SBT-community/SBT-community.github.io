@@ -167,15 +167,17 @@ theEditor.prototype.load_part = function (start)
           $(ed.subeditors[ii].root_container).removeClass('alert-danger')
         }
       }
-      return function()
+      return function(first)
       {
         var curval = ed.subeditors[ii].getEditor('root.Texts.Rus').getValue()
         check_codex_length(curval, after_check)
+        ed.touched = true
+        if (first){ ed.touched = false}
       }
     }
     ccheck = generate_codex_checker(i)
-    ccheck()
-    subeditor.watch('root.Texts.Rus', function(){ed.touched = true; ccheck()})
+    ccheck(true)
+    subeditor.watch('root.Texts.Rus', ccheck)
     if (this.json[i]['Texts']['Rus'] === "")
     {
       subeditor.root_container.className += ' alert-info'
