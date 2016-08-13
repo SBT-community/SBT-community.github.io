@@ -89,7 +89,7 @@ function check_codex_length(text, after_check)
   var splited = text.split(/([^\t\s\n\r]+|\r?\n)/)
   for (s in splited)
   {
-    if (splited[s].length == 0)
+    if (splited[s].length == 0 || splited[s].match(/\^.+;/))
     {continue}
     else if(splited[s] == '\n')
     {
