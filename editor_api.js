@@ -213,6 +213,7 @@ theEditor.prototype.load_part = function (start)
       $(c).find('h3').replaceWith("<a href='http://starbounder.org/Data:" +
         pathhref + "' target='_blank'>" + path + "</a>")
     })
+  $('table.table-bordered').css('width', '')
 }
 
 theEditor.prototype.get_json = function ()
