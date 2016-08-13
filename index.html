@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta content="text/html; charset=UTF-8"></meta>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta charset="utf-8"></meta>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet" id="icon_stylesheet">
   <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" id="theme_stylesheet">
@@ -14,6 +15,24 @@
   <script src="editor_api.js"></script>
   <script src="filemanager.js"></script>
   <script src="worker_manager.js"></script>
+  <style>
+  #sidebar.affix{
+    width: 12%;
+    top: 90px;
+  }
+  #topnav.affix {
+    top: 0;
+    width: 100%;
+    height: 70px;
+  }
+  .affix + .container-fluid {
+    padding-top: 70px;
+  }
+  .navbar{
+    z-index: 2;
+    height: 70px;
+  }
+  </style>
   <script type="text/javascript">
     JSONEditor.defaults.options.theme = 'bootstrap3';
     JSONEditor.defaults.options.iconlib = "bootstrap3";
@@ -73,6 +92,7 @@
       link.setAttribute('href', 'https://github.com/' + authdata.uname)
       link.innerHTML = udata.login
       var idiv = document.createElement('div')
+      idiv.style.width='inherit'
       var img = document.createElement('img')
       img.setAttribute('src', udata.avatar_url)
       img.className = 'img-responsive img-rounded'
@@ -225,28 +245,37 @@
   </script>
 </head>
 <body>
-  <div id='maket' class="container-fluid">
-  <div id='head' class='container'>
-  <h1>Интерфейс переводчика</h1>
-  <div class='col-sm-4'>
-   <div class="progress">
-      <div class="progress-bar" role="progressbar" id='global-progress'
-      aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
-        <span>0% переведено</span>
+  <div class='wrapper container'>
+  <header style='height: 100px' class='container'>
+    <div class='row'>
+    <div class='col-sm-6'>
+    <h1>Интерфейс переводчика</h1>
+     <div class="progress">
+        <div class="progress-bar" role="progressbar" id='global-progress'
+        aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+          <span>0% переведено</span>
+        </div>
       </div>
     </div>
-  </div>
-  </div>
+    </div>
+  </header>
 
-  <div class='row'>
-  <div id='left-placeholder' class='col-sm-1' ></div>
-  <div id='navi-placeholder' class='col-sm-2' >
-  <div id="navigation" class='col-sm-2' style="position: fixed">
+  <nav id='topnav' class='navbar navbar-default' data-spy='affix' data-offset-top='101'>
+  <div class='container' style='float:left'>
+    <div class='col-md-3'>
+    <h3 id='current-filename'></h3>
+    </div>
+    <ul id='editor-navigator' class='pagination'></ul>
+  </div>
+  </nav>
+
+  <div class='row container-fluid'>
+  <aside class='col-md-2' >
+  <nav id='sidebar' class='navbar-default' data-spy='affix'
+    data-offset-top='97'>
   <div id="fmnavigation">
     <button class="btn btn-default" id="login-button" style="display:none"
       type="button">Войти</button>
-    <button class="btn btn-default" id='gohome'
-      type="button">Домой</button>
   </div>
   <div id="editor-navigation"  style="display: none">
     <button class="btn btn-default" onclick='$("#loginRequiredAlert").slideDown()'
@@ -258,7 +287,8 @@
     type="button">
       [Раз/С]вернуть всё</button>
   </div>
-
+  <button class="btn btn-default" id='gohome'
+      type="button">Домой</button>
   <button class="btn btn-default"
       onclick="$('html, body').stop().animate({scrollTop: 0}, 1000)"
       type="button">Наверх</button>
@@ -275,18 +305,19 @@
     <button class="btn btn-success"
     id="do-login" type="button">Вход</button>
   </form>
+  </nav>
+  </aside>
 
-  </div><!--navigation -->
-  </div><!--left -->
-  <div id='content' class='col-sm-8'>
+  <section class='col-md-10'><!-- content -->
+  <section style='position: fixed; z-index: 3; width:50%'>
   <!-- Alerts-->
   <div class="alert alert-success fade in" id='commitSuccess'
-  style='display:none; position:fixed; z-index:11'>
+  style='display:none;'>
   <a href='#' class="close" onclick='$("#commitSuccess").slideUp()'>&times;</a>
   <strong>Успех!</strong> Ваши изменения успешно сохранены!
   </div>
   <div class="alert alert-info" id='commitWait'
-  style='display:none; position:fixed; z-index:11;width: 50%'>
+  style='display:none'>
   <p>Пожалуйста, подождите, идет сохранение...</p>
   <div class="progress">
     <div class="progress-bar bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
@@ -295,27 +326,29 @@
   </div>
   </div>
   <div class="alert alert-danger fade in" id='commitFailed'
-  style='display:none; position:fixed; z-index:11'>
+  style='display:none;'>
   <a href='#' class="close" onclick='$("#commitFailed").slideUp()'>&times;</a>
   <p id='commitFailedText'></p>
   </div>
   <div class="alert alert-danger fade in" id='loginRequiredAlert'
-  style='display:none; position:fixed; z-index:11'>
+  style='display:none;'>
   <a href='#' class="close" onclick='$("#loginRequiredAlert").slideUp()'>&times;</a>
   <strong>Ошибка!</strong> Чтобы сохранить изменения нужно войти.
   </div>
   <!-- /Alerts-->
+  </section>
+
+  <section>
   <div id="file-browser">
   </div>
   <div id="editor-holder" style="display: none">
-  <h3 id='current-filename'></h3>
-  <ul id='editor-navigator' class='pagination' ></ul>
   <div id='editor-holder-body'></div>
   </div>
-  </div><!--content -->
-  <div id='right-placeholder' class='col-sm-1' ></div>
-  </div><!--class:row -->
-  </div><!--maket -->
+  </section>
+
+  </section><!-- /content-->
+  </div><!-- /content row -->
+  </div><!-- /wrapper -->
 
   <!--Commit modal -->
   <div id='commitMessage' class='modal fade' role='dialog'>
