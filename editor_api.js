@@ -84,28 +84,29 @@ const schema = {
 
 function check_codex_length(text, after_check)
 {
-  const width = 36
-  const height = 15
-  var rows = 0
-  var cols = 0
+  var width = 36
+  var height = 15
   var splited = text.split(/([^\t\s\n\r]+|\r?\n)/)
   for (s in splited)
   {
     if (splited[s].length == 0)
     {continue}
     else if(splited[s] == '\n')
-    {rows++}
+    {
+      height--
+      width = 36
+    }
     else
     {
-      cols += splited[s].length
+      width -= splited[s].length
     }
-    if (cols > width && splited[s] != ' ')
+    if (width < 0 && splited[s] != ' ')
     {
-      cols = splited[s].length
-      rows++
+      width = 36 - splited[s].length
+      height--
     }
   }
-  after_check(rows-height)
+  after_check(-height)
 }
 
 function theEditor(holder, navigator)
