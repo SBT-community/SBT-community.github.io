@@ -147,6 +147,13 @@ theEditor.prototype.load_part = function (start)
     var subeditor = new JSONEditor(holder, fixed_schema)
     subeditor.setValue(this.json[i])
     this.subeditors[i] = subeditor
+    if (this.json[i]['DeniedAlternatives'] &&
+      this.json[i]['DeniedAlternatives'].length > 0)
+    {
+      $(subeditor.root_container)
+        .find('div[data-schemapath="root.DeniedAlternatives"]')
+        .addClass('alert-success')
+    }
     function generate_codex_checker(ii)
     {
       function after_check(diff)
