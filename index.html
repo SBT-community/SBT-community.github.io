@@ -262,20 +262,20 @@
   </header>
 
   <nav id='topnav' class='navbar navbar-default' data-spy='affix' data-offset-top='101'>
-  <div class='container' id='editor-navbar' style='float:left; display: none'>
+  <div class='row container' id='editor-navbar' style='float:left; display: none'>
     <div class='col-sm-3'>
     <h3 id='current-filename'></h3>
     </div>
     <ul id='editor-navigator' class='pagination'></ul>
   </div>
-  <div class='container' id='fm-navbar' style='float:left'>
+  <div class='row container' id='fm-navbar' style='float:left'>
   <ul class='breadcrumb' id='fm-history'>
   </ul>
   </div>
   </nav>
 
   <div class='row container-fluid'>
-  <aside class='col-sm-2' >
+  <aside class='col-sm-2' id='sidebar-placeholder'>
   <nav id='sidebar' class='navbar-default' data-spy='affix'
     data-offset-top='97'>
   <div id="editor-navigation"  style="display: none">
@@ -400,11 +400,14 @@
 
   <script type="text/javascript">
     var theStatusUpdater = {}
+    function adjust_floatside()
+      {$('#sidebar').width($('#sidebar-placeholder').width())}
     $(document).ready(function()
     {
       // Initialization
       var editor = new theEditor("editor-holder-body", "editor-navigator")
-
+      adjust_floatside()
+      $(window).resize(adjust_floatside)
       function on_file(json)
       {
         $("#editor-holder").slideDown()
