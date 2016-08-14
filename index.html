@@ -57,8 +57,9 @@
       }
       $("#editor-holder").slideUp()
       $("#editor-navigation").slideUp()
+      $("#editor-navbar").slideUp()
+      $("#fm-navbar").slideDown()
       $("#file-browser").slideDown()
-      $("#fmnavigation").slideDown()
       editor.reset()
     }
 
@@ -261,11 +262,15 @@
   </header>
 
   <nav id='topnav' class='navbar navbar-default' data-spy='affix' data-offset-top='101'>
-  <div class='container' style='float:left'>
+  <div class='container' id='editor-navbar' style='float:left; display: none'>
     <div class='col-sm-3'>
     <h3 id='current-filename'></h3>
     </div>
     <ul id='editor-navigator' class='pagination'></ul>
+  </div>
+  <div class='container' id='fm-navbar' style='float:left'>
+  <ul class='breadcrumb' id='fm-history'>
+  </ul>
   </div>
   </nav>
 
@@ -273,10 +278,6 @@
   <aside class='col-sm-2' >
   <nav id='sidebar' class='navbar-default' data-spy='affix'
     data-offset-top='97'>
-  <div id="fmnavigation">
-    <button class="btn btn-default" id="login-button" style="display:none"
-      type="button">Войти</button>
-  </div>
   <div id="editor-navigation"  style="display: none">
     <button class="btn btn-default" onclick='$("#loginRequiredAlert").slideDown()'
     type="button" id='commitButton'>Сохранить</button>
@@ -410,8 +411,9 @@
       {
         $("#editor-holder").slideDown()
         $("#file-browser").slideUp()
+        $("#editor-navbar").slideDown()
+        $("#fm-navbar").slideUp()
         $("#editor-navigation").slideDown()
-        $("#fmnavigation").slideUp()
         editor.filedata = json
         editor.open_json(Base64.decode(json.content))
       }
@@ -432,26 +434,6 @@
       theStatusUpdater = get_worker(account)
       add_event_callback(theStatusUpdater, "setstatus", statusUpdateHandler)
 
-      var args = get_call_arguments()
-      if (!args.code)
-      {
-        var authbutton = document.getElementById("login-button")
-        //authbutton.style.display = ""//Will be commented until oauth wont be implemented
-        var state = Math.random().toString(36).substring(7);
-        var href_part = "https://github.com/login/oauth/authorize?" +
-            "client_id=9e609aef5d6e71a4ed63&" +
-            "redirect_url=\\\"https://sbt-community.github.io/\\\"&" +
-            "state=" + state
-        authbutton.onclick = function(){
-          location.href = href_part
-        }
-      }
-      else
-      {
-        alert("Autorization token received but no client secret provided."+
-          "It's not your fault, just a signal about forbidden type of authorization." +
-          "Actually you shouldn't see that message.")
-      }
       $('#perform-commit').on('click', function(){commit(account, editor)})
       $('#backtofm').on('click', function(){backtofm(editor);})
       $('#force-backtofm').on('click', function()
