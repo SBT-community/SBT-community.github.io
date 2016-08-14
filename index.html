@@ -288,8 +288,6 @@
     type="button">
       [Раз/С]вернуть всё</button>
   </div>
-  <button class="btn btn-default" id='gohome'
-      type="button">Домой</button>
   <button class="btn btn-default"
       onclick="$('html, body').stop().animate({scrollTop: 0}, 1000)"
       type="button">Наверх</button>
@@ -418,7 +416,6 @@
         editor.open_json(Base64.decode(json.content))
       }
 
-      prepare_fm(document.getElementById("file-browser"))
       var authdata = get_authdata()
       var account = new GHAccount(authdata, "SBT-community/Starbound_RU",
         'web-interface')
@@ -430,6 +427,10 @@
       {
         login(account,authdata)
       }
+
+      var filemanager = new FileManager(document.getElementById("file-browser"),
+        document.getElementById("fm-history"), account, on_file)
+      filemanager.goto_home()
 
       theStatusUpdater = get_worker(account)
       add_event_callback(theStatusUpdater, "setstatus", statusUpdateHandler)
@@ -454,7 +455,6 @@
             return o;
           }, {}))
       })
-      goto_home(account, on_file)
       theStatusUpdater.promise.then(function(w){ w.postMessage({name: 'getstatus',
         id: 'global-progress', path: 'translations/'})})
     })
