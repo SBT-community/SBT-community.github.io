@@ -84,25 +84,23 @@ const schema = {
 
 function check_codex_length(text, after_check)
 {
-  var width = 36
-  var height = 15
+  var width = 35
+  var height = 14 // 15, but first string taken anyway
   var splited = text.split(/([^\t\s\n\r]+|\r?\n)/)
   for (s in splited)
   {
     if (splited[s].length == 0 || splited[s].match(/\^.+;/))
-    {continue}
+      continue
     else if(splited[s] == '\n')
     {
       height--
-      width = 36
+      width = 35
     }
     else
-    {
       width -= splited[s].length
-    }
     if (width < 0 && splited[s] != ' ')
     {
-      width = 36 - splited[s].length
+      width = 35 - splited[s].length
       height--
     }
   }
