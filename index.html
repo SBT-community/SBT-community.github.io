@@ -25,6 +25,11 @@
     width: 100%;
     height: 70px;
   }
+  .maxcontent {
+    width: -moz-max-content;
+    width: -webkit-max-content;
+    width: max-content;
+  }
   .affix + .container-fluid {
     padding-top: 70px;
   }
@@ -263,10 +268,22 @@
 
   <nav id='topnav' class='navbar navbar-default' data-spy='affix' data-offset-top='101'>
   <div class='row container' id='editor-navbar' style='float:left; display: none'>
-    <div class='col-sm-3'>
+    <div class='col-sm-4'>
     <h3 id='current-filename'></h3>
     </div>
-    <ul id='editor-navigator' class='pagination'></ul>
+    <div class='col-sm-1'>
+      <button class='btn btn-block btn-default' style='margin: 7px 0;' id='paginationbackward'
+        onclick='$("#pagination-holder").animate({scrollLeft: "-=" + $("#pagination-holder").width()}, 500)'
+        ><<</button>
+    </div>
+    <div class='col-sm-6' id='pagination-holder' style='overflow: hidden;'>
+    <ul id='editor-navigator' class='pagination maxcontent' style='margin: 7px 0;'></ul>
+    </div>
+    <div class='col-sm-1'>
+      <button class='btn btn-block btn-default' style='margin: 7px 0;' id='paginationforward'
+        onclick='$("#pagination-holder").animate({scrollLeft: "+=" + $("#pagination-holder").width()}, 500)'
+        >>></button>
+    </div>
   </div>
   <div class='row container' id='fm-navbar' style='float:left'>
   <ul class='breadcrumb' id='fm-history'>
