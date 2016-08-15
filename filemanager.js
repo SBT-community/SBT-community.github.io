@@ -74,7 +74,6 @@ function add_file(table, name, type, on_click)
 FileManager.prototype.track = function(path)
 {
   var fm = this
-  console.log(path)
   let parts = path.slice(path_prefix.length).split('/')
   var curparts = $(this.navigator).children().toArray()
   function make_link(thepath, i)
@@ -85,10 +84,6 @@ FileManager.prototype.track = function(path)
     if (offset == 0)
       offset = thepath.length
     let reduced = thepath.slice(0, offset)
-    console.log(reduced)
-    console.log(offset)
-    console.log(i)
-    console.log(path)
     return function()
     {
       fm.goto_path(reduced)
