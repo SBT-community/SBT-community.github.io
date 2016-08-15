@@ -239,14 +239,13 @@
       obj.style.width = data.val + '%'
       obj.setAttribute('aria-valuenow', data.val)
       obj.innerHTML = Math.floor(data.val) + '% переведено'
+      obj.className = 'progress-bar'
       if (data.val < 50)
-      {
-        obj.className = 'progress-bar progress-bar-danger'
-      }
+        $(obj).addClass('progress-bar-danger')
       else if (data.val < 100)
-      {
-        obj.className = 'progress-bar progress-bar-warning'
-      }
+        $(obj).addClass('progress-bar-warning')
+      else
+        $(obj).addClass('progress-bar-success')
     }
   </script>
 </head>
