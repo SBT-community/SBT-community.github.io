@@ -111,8 +111,8 @@ function check_codex_length(text, after_check)
 
 function theEditor(holder, navigator)
 {
-  this.holderid = holder
-  this.navbarid = navigator
+  this.holder = holder
+  this.navbar = navigator
   this.filedata = {}
   this.json = {}
   this.subeditors = {}
@@ -123,8 +123,7 @@ function theEditor(holder, navigator)
 theEditor.prototype.load_part = function (start)
 {
   this.subeditors = {}
-  var holder = document.getElementById(this.holderid)
-  holder.innerHTML = ""
+  this.holder.html("")
   var ed = this
   var to_highlight = []
   for (var i=start;i<this.json.length && i<start+editors_per_page;i+=1)
@@ -144,7 +143,7 @@ theEditor.prototype.load_part = function (start)
       fixed_schema.schema.options.collapsed = false
     }
     fixed_schema.schema.title = titletext
-    var subeditor = new JSONEditor(holder, fixed_schema)
+    var subeditor = new JSONEditor(this.holder[0], fixed_schema)
     subeditor.setValue(this.json[i])
     this.subeditors[i] = subeditor
     if (this.json[i]['DeniedAlternatives'] &&
@@ -191,15 +190,15 @@ theEditor.prototype.load_part = function (start)
       subeditor.root_container.className += ' alert-info'
     }
   }
-  $("#"+ this.holderid + " [name$=\"[Eng]\"]").each(function(i,d){d.readOnly=true})
-  $("#"+ this.holderid + " textarea[name$=\"]\"]").each(function(i,d){
+  $(this.holder).find("[name$=\"[Eng]\"]").each(function(i,d){d.readOnly=true})
+  $(this.holder).find("textarea[name$=\"]\"]").each(function(i,d){
       d.className = 'input-lg form-control'
       if (d.value.length != 0)
       {
         d.rows = Math.ceil(d.value.length/27)
       }
     })
-  $("#"+ this.holderid + ' div[data-schemapath^="root.Files."]').each(function(i,c){
+  $(this.holder).find('div[data-schemapath^="root.Files."]').each(function(i,c){
       let prefix_len = "root.Files.".length
       let path = $(c).attr('data-schemapath').substring(prefix_len)
       pathhref = path.split('/').pop().split('.')[0]
@@ -229,8 +228,7 @@ theEditor.prototype.get_json = function ()
 theEditor.prototype.json_onload = function (data)
 {
   this.json = []
-  var navbar = document.getElementById(this.navbarid)
-  navbar.innerHTML = ""
+  this.navbar.innerHTML = ""
   var page = 1
   $('#current-filename').text(this.filedata.name)
   var editor = this
@@ -241,10 +239,8 @@ theEditor.prototype.json_onload = function (data)
         editor.json[n] = e.getValue()
         e.destroy()
       })
-      $.each(document.getElementById(editor.navbarid).childNodes, function(i, c){
-        c.className = ""
-      }) 
-      document.getElementById('navbarel-' + start).className = 'active'
+      $(editor.navbar).children().removeClass('active')
+      $(editor.navbar).find('#navbarel-' + start).addClass('active')
       editor.load_part(start)
     })
   }
@@ -258,19 +254,19 @@ theEditor.prototype.json_onload = function (data)
     navbutton.title = page
     navbutton.onclick = get_onclick(i)
     navelement.appendChild(navbutton)
-    navbar.appendChild(navelement)
+    this.navbar.append(navelement)
     this.json = this.json.concat(data.slice(i, i+editors_per_page))
     page += 1
   }
-  document.getElementById('navbarel-0').className = 'active'
+  $('#navbarel-0').addClass('active')
   this.load_part(0)
 }
 
 
 theEditor.prototype.reset = function ()
 {
-  document.getElementById(this.navbarid).innerHTML = ""
-  document.getElementById(this.holderid).innerHTML = ""
+  this.navbar.html("")
+  this.holder.html("")
   $('#current-filename').text('')
   $.each(this.subeditors, function(n, e){
       e.destroy()

@@ -422,7 +422,8 @@
     $(document).ready(function()
     {
       // Initialization
-      var editor = new theEditor("editor-holder-body", "editor-navigator")
+      var editor = new theEditor($("#editor-holder-body").last(),
+        $("#editor-navigator").last())
       adjust_floatside()
       $(window).resize(adjust_floatside)
       function on_file(json)
