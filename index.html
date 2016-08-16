@@ -312,13 +312,13 @@
   <div><button class="btn btn-default" type="button"
     onclick="$('#auth-failed').slideUp(); $('#auth-form').slideDown()">
     Попробовать снова</button></div></div>
-  <form id="auth-form" style="display: none">
+  <form class="form-group" id="auth-form" style="display: none">
     Имя пользователя:
     <input type='text' class='form-control' name='uname'>
     Пароль:
     <input type='password' class='form-control' name='upass'>
     <button class="btn btn-success"
-    id="do-login" type="button">Вход</button>
+    id="do-login" type="submit">Вход</button>
   </form>
   </nav>
   </aside>
@@ -467,8 +467,9 @@
         backtofm(editor);
         goto_home(account, on_file)
       })
-      $('#do-login').on('click', function()
+      $('#auth-form').submit( function(event)
       {
+        event.preventDefault()
         login(account, $('#auth-form').serializeArray().reduce(function(o, i)
           {
             o[i.name] = i.value;
