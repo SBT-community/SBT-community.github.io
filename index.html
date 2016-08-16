@@ -263,7 +263,7 @@
       resultsList.update_tree(results, "")
       $('#searchResults').modal()
     }
-    function search_assets(e, acc)
+    function searchAssets(e, acc)
     {
       var searchpattern = $('#searchstring').val()
       var promised_substitutions = new Promise(function(ok, fail){
@@ -294,8 +294,8 @@
         alert("Cann't perform search!")
       })
     }
-    function search_filename(e) {alert('Not implemented yet')}
-    function search_content(e) {alert('Not implemented yet')}
+    function searchFilename(e, acc) {alert('Not implemented yet')}
+    function searchContent(e, acc) {alert('Not implemented yet')}
   </script>
 </head>
 <body>
@@ -315,17 +315,18 @@
       <form class="input-group" id='search-form' style='margin: 20px 0;'>
         <span class='input-group-btn'>
           <button type='submit' title="Поиск по имени файла"
-            class='btn btn-default disabled' id='do_search'>
+            class='btn btn-default' id='do_search'>
           <span class='glyphicon glyphicon-search'></span></button>
           <button class='btn btn-default dropdown-toggle' data-toggle="dropdown"
             aria-haspopup="true" aria-expanded="false">
           <span class='caret'></span></button>
           <ul id='search-vars' class='dropdown-menu'>
-            <li class='disabled'><a id='searchcontent'>Поиск по содержанию файла</a>
-            </li>
-            <li class='disabled'><a id='searchfilename'>Поиск по имени файла</a></li>
-            <li class='disabled'>
-            <a id='searchassets'>Поиск по имени файла ресурса игры</a></li>
+            <li class='disabled' id='searchcontent'>
+            <a href='#'>Поиск по содержанию файла</a></li>
+            <li class='disabled' id='searchfilename'>
+            <a href='#'>Поиск по имени файла</a></li>
+            <li id='searchassets'>
+            <a href='#'>Поиск по имени файла ресурса игры</a></li>
           </ul>
         </span>
         <input type="text" id='searchstring' class="form-control"
@@ -554,16 +555,17 @@
         $('#search' + target).on('click', function(){
           $('#do_search').attr('title', $(this).text())
           $('#searchstring').attr('placeholder', $(this).text())
-          $('#search-form').submit(function(e)
-          {
-            e.preventDefault()
-            engine(e, account)
-          })
+          $('#search-form').off('submit')
+          $('#search-form').on('submit', function(e)
+            {
+              e.preventDefault()
+              engine(e, account)
+            })
         })
       }
-      bindEngineSelectHandler('content', search_content)
-      bindEngineSelectHandler('assets', search_assets)
-      bindEngineSelectHandler('filename', search_filename)
+      bindEngineSelectHandler('content', searchContent)
+      bindEngineSelectHandler('assets', searchAssets)
+      bindEngineSelectHandler('filename', searchFilename)
       $('#searchassets').click()
       $('#auth-form').submit( function(event)
       {
