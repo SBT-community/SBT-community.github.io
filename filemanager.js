@@ -145,7 +145,7 @@ FileManager.prototype.goto_path = function (path)
 {
   var fm = this
   this.account.getJSON(this.account.get_repo_suffix() + "contents/" + path + '?ref=' +
-    this.account.branch,
+    this.account.branch).then(
     function(json){
       fm.update_tree(json, path)
     })

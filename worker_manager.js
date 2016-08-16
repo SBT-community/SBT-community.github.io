@@ -14,28 +14,20 @@ function get_translation_status(msgHandlerList, account, preworker)
     prefix = "repos/SBT-community/Starbound_RU/contents"+
       "/translations/"
     postfix = "?ref=web-interface&current_time=" + thedate.getTime()
-    totprom = new Promise(function (got, oops)
-    {
-      account.getJSON(prefix + "totallabels.json"+postfix,
+    totprom = account.getJSON(prefix + "totallabels.json"+postfix).then(
       function(prp_json){
         var json = $.parseJSON(Base64.decode(prp_json.content))
         preworker.postMessage({name: "totalupdate", json: json})
-        got()
       })
-    })
-    trprom = new Promise(function (got, oops)
-    {
-      account.getJSON(prefix + "translatedlabels.json"+postfix,
+    trprom = account.getJSON(prefix + "translatedlabels.json"+postfix).then(
       function(prp_json){
         var json = $.parseJSON(Base64.decode(prp_json.content))
         preworker.postMessage({name: "translatedupdate", json: json})
-        got()
       })
-    })
     Promise.all([totprom, trprom]).then(function()
     {
       ok(preworker)
-    })
+    }).catch(fail)
   })
   return result
 }
