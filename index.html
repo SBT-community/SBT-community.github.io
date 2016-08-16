@@ -273,7 +273,7 @@
     <div class='col-sm-1'>
       <button class='btn btn-block btn-default' style='margin: 7px 0;' id='paginationbackward'
         onclick='$("#pagination-holder").animate({scrollLeft: "-=" + $("#pagination-holder").width()}, 500)'
-        ><<</button>
+        ><span class='glyphicon glyphicon-triangle-left'></span></button>
     </div>
     <div class='col-sm-6' id='pagination-holder' style='overflow: hidden;'>
     <ul id='editor-navigator' class='pagination maxcontent' style='margin: 7px 0;'></ul>
@@ -281,7 +281,7 @@
     <div class='col-sm-1'>
       <button class='btn btn-block btn-default' style='margin: 7px 0;' id='paginationforward'
         onclick='$("#pagination-holder").animate({scrollLeft: "+=" + $("#pagination-holder").width()}, 500)'
-        >>></button>
+        ><span class='glyphicon glyphicon-triangle-right'></span></button>
     </div>
   </div>
   <div class='row container' id='fm-navbar' style='float:left'>
