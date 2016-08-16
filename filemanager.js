@@ -106,7 +106,10 @@ FileManager.prototype.update_tree = function (file_json, path)
     this.on_file(file_json)
     return
   }
-  this.track(path)
+  if (path.length == 0)
+  {
+    this.track(path)
+  }
   $(this.table).find('tbody').html('')
 
   var offset = path.lastIndexOf("/")
@@ -123,11 +126,11 @@ FileManager.prototype.update_tree = function (file_json, path)
         fm.goto_path(prev_path)
       })
   }
-  function make_pb_request(pbid, path)
+  function make_pb_request(pbid, epath)
   {
     return function(w){ w.postMessage({name: "getstatus",
           id: pbid,
-          path: path})}
+          path: epath})}
   }
   $.each(file_json, function(i, e)
     {
@@ -144,6 +147,10 @@ FileManager.prototype.update_tree = function (file_json, path)
 FileManager.prototype.goto_path = function (path)
 {
   var fm = this
+  if (!this.account)
+  {
+    this.on_file(path)
+  }
   this.account.getJSON(this.account.get_repo_suffix() + "contents/" + path + '?ref=' +
     this.account.branch).then(
     function(json){
