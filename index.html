@@ -252,7 +252,7 @@
 <body>
   <div class='wrapper container'>
   <header style='height: 100px' class='container'>
-    <div class='row'>
+  <div class='row'>
     <div class='col-sm-6'>
     <h1>Интерфейс переводчика</h1>
      <div class="progress">
@@ -262,7 +262,27 @@
         </div>
       </div>
     </div>
+    <div class='col-sm-6'>
+      <form class="input-group" id='search-form' style='margin: 20px 0;'>
+        <span class='input-group-btn'>
+          <button type='submit' title="Поиск по имени файла"
+            class='btn btn-default disabled' >
+          <span class='glyphicon glyphicon-search'></span></button>
+          <button class='btn btn-default dropdown-toggle' data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+          <span class='caret'></span></button>
+          <ul id='search-vars' class='dropdown-menu'>
+            <li class='disabled'><a id='searchcontent'>Поиск по содержанию файла</a>
+            </li>
+            <li class='disabled'><a id='searchfilename'>Поиск по имени файла</a></li>
+            <li class='disabled'><a id='searchassetname'>
+            Поиск по имени файла ресурса игры</a></li>
+          </ul>
+        </span>
+        <input type="text" class="form-control" placeholder="Поиск по имени файла">
+      </form>
     </div>
+  </div>
   </header>
 
   <nav id='topnav' class='navbar navbar-default' data-spy='affix' data-offset-top='101'>
@@ -466,6 +486,11 @@
       {
         backtofm(editor);
         goto_home(account, on_file)
+      })
+      $('#search-form').submit(function(e)
+      {
+        e.preventDefault()
+        console.log(e)
       })
       $('#auth-form').submit( function(event)
       {
