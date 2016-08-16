@@ -279,10 +279,3 @@ theEditor.prototype.open_json = function (content)
   data = $.parseJSON(content)
   this.json_onload(data)
 }
-
-theEditor.prototype.load_json = function (url)
-{
-  getJSON(authdata, url, function(data){
-    this.json_onload(data)
-  })
-}
