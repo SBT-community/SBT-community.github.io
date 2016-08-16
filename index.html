@@ -247,6 +247,55 @@
       else
         $(obj).addClass('progress-bar-success')
     }
+    function fill_search_results(results)
+    {
+      var listHolder = $('#searchresult-holder')
+      listHolder.html("")
+      var resultsList = new FileManager(listHolder.last()[0], null, null,
+        function(p){
+          var newwin = window.open(document.location + '?open='+escape(p))
+          if (newwin)
+            newwin.focus()
+          else
+            alert("Вы блокируете всплывающие окна на этом сайте, но при " +
+             "этом просите открыть файл... Не надо так!")
+        })
+      resultsList.update_tree(results, "")
+      $('#searchResults').modal()
+    }
+    function search_assets(e, acc)
+    {
+      var searchpattern = $('#searchstring').val()
+      var promised_substitutions = new Promise(function(ok, fail){
+        $.ajax({
+          url: 'https://rawgit.com/SBT-community/Starbound_RU/web-interface/'+
+            'translations/substitutions.json',
+          success:ok,
+          error:fail,
+          type: "GET",
+          dataType: "json"
+        })
+      })
+      promised_substitutions.then(function(subs)
+      {
+        var results = []
+        for(k in subs)
+          if(k.indexOf(searchpattern) != -1)
+            for (i in subs[k])
+              results.push({
+                path: 'translations/' + subs[k][i],
+                name: subs[k][i].split('/').pop(),
+                size: 0,
+                type: "file"
+              })
+        return results
+      }).then(fill_search_results).catch(function(e){
+        console.log(e)
+        alert("Cann't perform search!")
+      })
+    }
+    function search_filename(e) {alert('Not implemented yet')}
+    function search_content(e) {alert('Not implemented yet')}
   </script>
 </head>
 <body>
@@ -266,7 +315,7 @@
       <form class="input-group" id='search-form' style='margin: 20px 0;'>
         <span class='input-group-btn'>
           <button type='submit' title="Поиск по имени файла"
-            class='btn btn-default disabled' >
+            class='btn btn-default disabled' id='do_search'>
           <span class='glyphicon glyphicon-search'></span></button>
           <button class='btn btn-default dropdown-toggle' data-toggle="dropdown"
             aria-haspopup="true" aria-expanded="false">
@@ -275,11 +324,12 @@
             <li class='disabled'><a id='searchcontent'>Поиск по содержанию файла</a>
             </li>
             <li class='disabled'><a id='searchfilename'>Поиск по имени файла</a></li>
-            <li class='disabled'><a id='searchassetname'>
-            Поиск по имени файла ресурса игры</a></li>
+            <li class='disabled'>
+            <a id='searchassets'>Поиск по имени файла ресурса игры</a></li>
           </ul>
         </span>
-        <input type="text" class="form-control" placeholder="Поиск по имени файла">
+        <input type="text" id='searchstring' class="form-control"
+        placeholder="Поиск по имени файла"></input>
       </form>
     </div>
   </div>
@@ -384,7 +434,20 @@
   </section><!-- /content-->
   </div><!-- /content row -->
   </div><!-- /wrapper -->
-
+  <!--Search_results modal-->
+  <div id='searchResults' class='modal fade' role='dialog'>
+  <div class='modal-dialog modal-lg'>
+  <div class='modal-content'>
+  <div class='modal-header'>
+  <button type="button" class="close" data-dismiss="modal">&times;</button>
+    <h4 class="modal-title">Результаты поиска</h4>
+  </div>
+  <div class='modal-body' style='overflow-y: auto'>
+    <div id='searchresult-holder'></div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" data-dismiss="modal">Отмена</button>
+  </div></div></div></div><!--/Search_results modal-->
   <!--Commit modal -->
   <div id='commitMessage' class='modal fade' role='dialog'>
   <div class='modal-dialog modal-lg'>
@@ -482,16 +545,22 @@
         editor.touched = false;
         backtofm(editor);
       })
-      $('#gohome').on('click', function()
+      function bindEngineSelectHandler(target, engine)
       {
-        backtofm(editor);
-        goto_home(account, on_file)
-      })
-      $('#search-form').submit(function(e)
-      {
-        e.preventDefault()
-        console.log(e)
-      })
+        $('#search' + target).on('click', function(){
+          $('#do_search').attr('title', $(this).text())
+          $('#searchstring').attr('placeholder', $(this).text())
+          $('#search-form').submit(function(e)
+          {
+            e.preventDefault()
+            engine(e, account)
+          })
+        })
+      }
+      bindEngineSelectHandler('content', search_content)
+      bindEngineSelectHandler('assets', search_assets)
+      bindEngineSelectHandler('filename', search_filename)
+      $('#searchassets').click()
       $('#auth-form').submit( function(event)
       {
         event.preventDefault()
