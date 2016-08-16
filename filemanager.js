@@ -1,14 +1,6 @@
 
 const filetreeid = 'fmtree'
 const path_prefix = "translations/texts"
-const fold_icon = "<path d=\"M13 4H7V3c0-.66-.31-1-1-1H1c-.55 0-1 .45-1" +
-  " 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V5c0-.55-.45-1-1-1zM6 4H1V3h5" +
-  "v1z\"></path>"
-const file_icon = "<path d=\"M6 5H2V4h4v1zM2 8h7V7H2v1zm0 2h7V9H2v1zm0 " +
-  "2h7v-1H2v1zm10-7.5V14c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1V2c0-.55.45-" +
-  "1 1-1h7.5L12 4.5zM11 5L8 2H1v12h10V5z\"></path>"
-const svg_template = "<svg aria-hidden=\"true\" class=\"octicon\" " +
-"height=\"16\" version=\"1.1\" viewBox=\"0 0 14 16\" width=\"14\">"
 
 function FileManager(holder, navigator, account, on_file)
 {
@@ -29,16 +21,14 @@ function add_file(table, name, type, on_click)
 {
   var row = table.insertRow()
   var img = row.insertCell()
-  if (type == "dir")
-  {
-    img.innerHTML = svg_template + fold_icon + "</svg>"
+  var glyph = {
+    "dir": "folder-open",
+    "file": "list-alt",
+    "up": "level-up"
   }
-  else
-  {
-    img.innerHTML = svg_template + file_icon + "</svg>"
-  }
+  img.innerHTML = "<span class='glyphicon glyphicon-" + glyph[type] + "'></span>"
   img.className = "img-responsive"
-  img.style.width = 14
+  img.style.width = 16
   var link = row.insertCell()
   link.className = "container"
   var completion = row.insertCell()
@@ -128,7 +118,7 @@ FileManager.prototype.update_tree = function (file_json, path)
     {
       prev_path = prev_path + path.slice(offset)
     }
-    add_file(fm.table, "..", "dir",function()
+    add_file(fm.table, "..", "up",function()
       {
         fm.goto_path(prev_path)
       })
