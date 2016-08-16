@@ -251,7 +251,7 @@
     {
       var listHolder = $('#searchresult-holder')
       listHolder.html("")
-      var resultsList = new FileManager(listHolder.last()[0], null, null,
+      var resultsList = new FileManager(listHolder[0], null, null,
         function(p){
           var newwin = window.open(document.location + '?open='+escape(p))
           if (newwin)
@@ -531,9 +531,13 @@
         login(account,authdata)
       }
 
-      var filemanager = new FileManager(document.getElementById("file-browser"),
-        document.getElementById("fm-history"), account, on_file)
-      filemanager.goto_home()
+      var filemanager = new FileManager($("#file-browser")[0],
+        $("#fm-history")[0], account, on_file)
+      var callargs = get_call_arguments()
+      if (callargs.open)
+        filemanager.goto_path(unescape(callargs.open))
+      else
+        filemanager.goto_home()
 
       theStatusUpdater = get_worker(account)
       add_event_callback(theStatusUpdater, "setstatus", statusUpdateHandler)
