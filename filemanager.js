@@ -106,7 +106,7 @@ FileManager.prototype.update_tree = function (file_json, path)
     this.on_file(file_json)
     return
   }
-  if (path.length == 0)
+  if (path.length > 0)
   {
     this.track(path)
   }
