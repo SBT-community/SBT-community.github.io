@@ -17,9 +17,9 @@ function FileManager(holder, navigator, account, on_file)
 }
 
 
-function add_file(table, name, type, on_click)
+FileManager.prototype.add_file = function(name, type, on_click)
 {
-  var row = table.insertRow()
+  var row = this.table.insertRow()
   var img = row.insertCell()
   var glyph = {
     "dir": "folder-open",
@@ -38,7 +38,7 @@ function add_file(table, name, type, on_click)
   complframe.style["margin-bottom"] = 0
   complframe.className = 'progress'
   complindicator.className = 'progress-bar progress-bar-success'
-  complindicator.id = "progress-" + name
+  complindicator.id = this.holder.id + "-progress-" + name.replace(/\./g, '-')
   complindicator.setAttribute('role', 'progressbar')
   complindicator.setAttribute('aria-valuemin', 0)
   complindicator.setAttribute('aria-valuemax', 100)
@@ -121,7 +121,7 @@ FileManager.prototype.update_tree = function (file_json, path)
     {
       prev_path = prev_path + path.slice(offset)
     }
-    add_file(fm.table, "..", "up",function()
+    fm.add_file( "..", "up",function()
       {
         fm.goto_path(prev_path)
       })
@@ -136,7 +136,7 @@ FileManager.prototype.update_tree = function (file_json, path)
     {
       if (e.size >= 1024000)
       {return}
-      pbid = add_file(fm.table, e.name, e.type, function()
+      pbid = fm.add_file(e.name, e.type, function()
         {
           fm.goto_path(e.path)
         })

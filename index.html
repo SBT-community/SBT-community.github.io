@@ -235,17 +235,18 @@
 
     function statusUpdateHandler(data)
     {
-      var obj = document.getElementById(data.id)
-      obj.style.width = data.val + '%'
-      obj.setAttribute('aria-valuenow', data.val)
-      obj.innerHTML = Math.floor(data.val) + '% переведено'
-      obj.className = 'progress-bar'
+      var obj = $('#' + data.id)
+      obj.width(data.val + '%')
+      obj.attr('aria-valuenow', data.val)
+      obj.html(Math.floor(data.val) + '% переведено')
+      obj.removeClass()
+      obj.addClass('progress-bar')
       if (data.val < 50)
-        $(obj).addClass('progress-bar-danger')
+        obj.addClass('progress-bar-danger')
       else if (data.val < 100)
-        $(obj).addClass('progress-bar-warning')
+        obj.addClass('progress-bar-warning')
       else
-        $(obj).addClass('progress-bar-success')
+        obj.addClass('progress-bar-success')
     }
     function fill_search_results(results)
     {
