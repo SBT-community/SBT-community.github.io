@@ -282,13 +282,16 @@
         for(k in subs)
           if(k.indexOf(searchpattern) != -1)
             for (i in subs[k])
-              results.push({
-                path: 'translations/' + subs[k][i],
-                name: subs[k][i].split('/').pop(),
-                size: 0,
-                type: "file"
-              })
-        return results
+              if (!results.includes(subs[k][i]))
+                results.push(subs[k][i])
+        return results.map(function(p){
+          return {
+                  path: 'translations/' + p,
+                  name: p.split('/').pop(),
+                  size: 0,
+                  type: "file"
+                }
+        })
       }).then(fill_search_results).catch(function(e){
         console.log(e)
         alert("Cann't perform search!")
