@@ -326,11 +326,11 @@
           <span class='caret'></span></button>
           <ul id='search-vars' class='dropdown-menu'>
             <li class='disabled' id='searchcontent'>
-            <a href='#'>Поиск по содержанию файла</a></li>
+            <a href='javascript:void(0);'>Поиск по содержанию файла</a></li>
             <li class='disabled' id='searchfilename'>
-            <a href='#'>Поиск по имени файла</a></li>
+            <a href='javascript:void(0);'>Поиск по имени файла</a></li>
             <li id='searchassets'>
-            <a href='#'>Поиск по имени файла ресурса игры</a></li>
+            <a href='javascript:void(0);'>Поиск по имени файла ресурса игры</a></li>
           </ul>
         </span>
         <input type="text" id='searchstring' class="form-control"
@@ -403,7 +403,7 @@
   <!-- Alerts-->
   <div class="alert alert-success fade in" id='commitSuccess'
   style='display:none;'>
-  <a href='#' class="close" onclick='$("#commitSuccess").slideUp()'>&times;</a>
+  <a href='javascript:$("#commitSuccess").slideUp()' class="close">&times;</a>
   <strong>Успех!</strong> Ваши изменения успешно сохранены!
   </div>
   <div class="alert alert-info" id='commitWait'
@@ -417,12 +417,12 @@
   </div>
   <div class="alert alert-danger fade in" id='commitFailed'
   style='display:none;'>
-  <a href='#' class="close" onclick='$("#commitFailed").slideUp()'>&times;</a>
+  <a href='javascript:$("#commitFailed").slideUp()' class="close">&times;</a>
   <p id='commitFailedText'></p>
   </div>
   <div class="alert alert-danger fade in" id='loginRequiredAlert'
   style='display:none;'>
-  <a href='#' class="close" onclick='$("#loginRequiredAlert").slideUp()'>&times;</a>
+  <a href='javascript:$("#loginRequiredAlert").slideUp()' class="close">&times;</a>
   <strong>Ошибка!</strong> Чтобы сохранить изменения нужно войти.
   </div>
   <!-- /Alerts-->
