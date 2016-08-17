@@ -4,7 +4,7 @@ var translatedfiles = {}
 
 pathregex = /\/?([^\/]+)\/(.+)/
 
-function sum_up(counter)
+function sumUp(counter)
 {
   var result = 0
   if (typeof counter == "number")
@@ -13,12 +13,12 @@ function sum_up(counter)
   }
   for (f in counter)
   {
-    result += sum_up(counter[f])
+    result += sumUp(counter[f])
   }
   return result
 }
 
-function access_by_path(obj, path, newval)
+function accessByPath(obj, path, newval)
 {
   //console.log(path)
   //console.log(obj)
@@ -37,13 +37,13 @@ function access_by_path(obj, path, newval)
   }
   var cur = ans[1]
   var tail = ans[2]
-  return access_by_path(obj[cur], tail, newval)
+  return accessByPath(obj[cur], tail, newval)
 }
 
-function get_by_path(obj, path)
-{return access_by_path(obj, path)}
+function getByPath(obj, path)
+{return accessByPath(obj, path)}
 
-function set_translated(obj, path, n)
+function setTranslated(obj, path, n)
 {
   path = path.substring("translations/".length)
   oldvalue = access_by_path(obj, path)
@@ -58,11 +58,11 @@ function set_translated(obj, path, n)
   }
 }
 
-function handle_status(data)
+function handleStatus(data)
 {
   var path = data.path.substring("translations/".length)
-  var trs = sum_up(get_by_path(translatedfiles, path))
-  var value = trs * 100 / sum_up(get_by_path(totalfiles, path))
+  var trs = sumUp(getByPath(translatedfiles, path))
+  var value = trs * 100 / sumUp(getByPath(totalfiles, path))
   postMessage({name: "setstatus", id: data.id, val: value})
 }
 
@@ -77,10 +77,10 @@ onmessage = function(msg)
       translatedfiles = msg.data.json
       break;
     case "getstatus":
-      handle_status( msg.data)
+      handleStatus( msg.data)
       break;
     case "updatetranslated":
-      set_translated(translatedfiles, msg.data.path, msg.data.value)
+      setTranslated(translatedfiles, msg.data.path, msg.data.value)
       break;
     default:
       break;
