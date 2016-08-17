@@ -20,8 +20,6 @@ function sumUp(counter)
 
 function accessByPath(obj, path, newval)
 {
-  //console.log(path)
-  //console.log(obj)
   if (path.length == 0)
   {
     return obj
@@ -46,10 +44,10 @@ function getByPath(obj, path)
 function setTranslated(obj, path, n)
 {
   path = path.substring("translations/".length)
-  oldvalue = access_by_path(obj, path)
+  oldvalue = accessByPath(obj, path)
   if (oldvalue !== n)
   {
-    access_by_path(obj, path, n)
+    accessByPath(obj, path, n)
     postMessage({name: "updatetranslated", needed: true, json: obj})
   }
   else
