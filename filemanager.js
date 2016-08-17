@@ -150,6 +150,7 @@ FileManager.prototype.goto_path = function (path)
   if (!this.account)
   {
     this.on_file(path)
+    return
   }
   this.account.getJSON(this.account.get_repo_suffix() + "contents/" + path + '?ref=' +
     this.account.branch).then(
