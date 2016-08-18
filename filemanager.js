@@ -38,7 +38,7 @@ FileManager.prototype.add_file = function(name, type, on_click)
   complframe.style["margin-bottom"] = 0
   complframe.className = 'progress'
   complindicator.className = 'progress-bar progress-bar-success'
-  complindicator.id = this.holder.id + "-progress-" + name.replace(/\./g, '-')
+  complindicator.id = this.holder.id + "-progress-" + name.replace(/[\./]/g, '-')
   complindicator.setAttribute('role', 'progressbar')
   complindicator.setAttribute('aria-valuemin', 0)
   complindicator.setAttribute('aria-valuemax', 100)
@@ -126,12 +126,6 @@ FileManager.prototype.update_tree = function (file_json, path)
         fm.goto_path(prev_path)
       })
   }
-  function make_pb_request(pbid, epath)
-  {
-    return function(w){ w.postMessage({name: "getstatus",
-          id: pbid,
-          path: epath})}
-  }
   $.each(file_json, function(i, e)
     {
       if (e.size >= 1024000)
@@ -140,7 +134,7 @@ FileManager.prototype.update_tree = function (file_json, path)
         {
           fm.goto_path(e.path)
         })
-      theStatusUpdater.promise.then(make_pb_request(pbid, e.path))
+      theWorker.justSend("getstatus", {id:pbid, path:e.path})
     })
 }
 

@@ -1,83 +1,56 @@
 
-function get_translation_status(msgHandlerList, account, preworker)
+function ProWorker(account)
 {
-  var thedate = new Date()
-  var result = new Promise(function (ok, fail)
+  this.worker = new Worker('worker.js')
+  this.account = account
+  this.mhandlers = {}
+  var pw = this
+  this.worker.onmessage = function(msg)
   {
-    preworker.onmessage = function(msg)
-    {
-      for (h in msgHandlerList)
-      {
-        if (msgHandlerList[h](msg)) {break}
-      }
-    }
-    prefix = "repos/SBT-community/Starbound_RU/contents"+
-      "/translations/"
-    postfix = "?ref=web-interface&current_time=" + thedate.getTime()
-    totprom = account.getJSON(prefix + "totallabels.json"+postfix).then(
-      function(prp_json){
-        var json = $.parseJSON(Base64.decode(prp_json.content))
-        preworker.postMessage({name: "totalupdate", json: json})
-      })
-    trprom = account.getJSON(prefix + "translatedlabels.json"+postfix).then(
-      function(prp_json){
-        var json = $.parseJSON(Base64.decode(prp_json.content))
-        preworker.postMessage({name: "translatedupdate", json: json})
-      })
-    Promise.all([totprom, trprom]).then(function()
-    {
-      ok(preworker)
-    }).catch(fail)
+    for (i in pw.mhandlers[msg.data.name])
+      pw.mhandlers[msg.data.name][i](msg.data.msg)
+  }
+}
+
+ProWorker.prototype.connect = function (mname, mcallback)
+{
+  if (! $.isArray(this.mhandlers[mname]))
+    this.mhandlers[mname] = []
+  if (! this.mhandlers[mname].includes(mcallback))
+    this.mhandlers[mname].push(mcallback)
+}
+
+ProWorker.prototype.disconnect = function (mname, mcallback)
+{
+  if (! $.isArray(this.mhandlers[mname]))
+    this.mhandlers[mname] = []
+  if (typeof mcallback == "number")
+    this.mhandlers[mname].splice(mcallback, 0)
+  else if (! this.mhandlers[mname].includes(mcallback))
+    this.mhandlers[mname] = this.mhandlers[mname]
+      .filter(function(e){return (e != mcallback)})
+}
+
+ProWorker.prototype.connectOneShot = function (mname, mcallback)
+{
+  var pw = this
+  let oneshotcb = function(data){
+    mcallback(data)
+    pw.disconnect(oneshotcb)
+  }
+  this.connect(mname, oneshotcb)
+}
+
+ProWorker.prototype.justSend = function (name, msg)
+{
+  this.worker.postMessage({name: name, account: this.account, msg: msg})
+}
+
+ProWorker.prototype.send = function (name, msg)
+{
+  var pw = this
+  return new Promise(function(ok, fail){
+    pw.connectOneShot(name, ok)
+    pw.justSend(name, msg)
   })
-  return result
 }
-
-function refresh_worker(w)
-{
-  w.promise = get_translation_status(w.handlers, w.account,
-    w.worker)
-}
-
-function get_worker(account, initialHandlers)
-{
-  var theworker = {}
-  theworker.worker = new Worker('progress_updater.js')
-  theworker.account = account
-  theworker.handlers = []
-  if (Array.isArray(initialHandlers))
-    {theworker.handlers = theworker.handlers.concat(initialHandlers)}
-  refresh_worker(theworker)
-  setPeriodic(true, theworker)
-  return theworker
-}
-
-function add_event_callback(w, ename, callback)
-{
-  var index = w.handlers.length
-  w.handlers.push(function(msg)
-  {
-    switch(msg.data.name)
-    {
-      case ename:
-        return callback(msg.data)
-      default:
-        return false
-    }
-  })
-  return index
-}
-
-function remove_event_callback(w, index)
-{w.handlers.splice(index, 1)}
-
-function setPeriodic(firsttime, w)
-{
-  setTimeout(function()
-  {
-    setPeriodic(false, w)
-  }, 5 * 60000)
-  if (firsttime)
-  {return}
-  refresh_worker(w)
-}
-

@@ -160,9 +160,9 @@
 
     function commit(account, editor)
     {
-      refresh_worker(theStatusUpdater)
-      var obj = editor.get_json()
-      var translated = 0
+      let progressrefreshed = theWorker.send("refreshprogress")
+      let obj = editor.get_json()
+      let translated = 0
       for (i in obj)
       {
         var field = obj[i]
@@ -173,14 +173,14 @@
         }
       }
 
-      var content = JSON.stringify(obj, null, 2)
+      let content = JSON.stringify(obj, null, 2)
       if (!account.authdata.uname)
       {return}
-      var messagetext = $('#commitMessageText')[0].value
+      let messagetext = $('#commitMessageText')[0].value
       if (messagetext.length == 0)
       {messagetext = 'Обновление ' + editor.filedata.path}
 
-      var tree = []
+      let tree = []
       tree.push(make_tree_entry(editor.filedata.path, content))
       function on_progress(progress)
       {
@@ -195,8 +195,7 @@
         $('#commitWait').slideUp()
         $('#commitMessageText')[0].value = ""
         $('#commitSuccess').slideDown().delay(2000).slideUp()
-        theStatusUpdater.worker.postMessage({
-            name: "getstatus",
+        theWorker.justSend("getstatus", {
             path: editor.filedata.path,
             id: "progress-" + editor.filedata.name
           })
@@ -204,7 +203,7 @@
       function on_fail(d, status, errorThrown)
       {
         $('#commitWait').slideUp()
-        console.log(JSON.stringify(d, null, 2))
+        console.log(d)
         console.log(status)
         console.log(errorThrown)
         $('#commitFailedText')[0].innerHTML = "<strong>Ошибка!</strong> При попытке " +
@@ -214,22 +213,24 @@
           JSON.stringify(d, null, 2)
         $('#commitFailed').slideDown().delay(10000).slideUp()
       }
-      var callback_index = add_event_callback(theStatusUpdater, "updatetranslated",
-      function(data)
+
+      let translation_updated = progressrefreshed.then(function()
+      {
+        return theWorker.send("updatetranslated",
+          {value: translated, path: editor.filedata.path})
+      })
+
+      Promise.resolve(translation_updated).then(function(data)
       {
         if (data.needed)
         {
-          tree.push(make_tree_entry("translations/translatedlabels.json", JSON.stringify(data.json, null, 2)))
+          tree.push(make_tree_entry("translations/translatedlabels.json",
+            JSON.stringify(data.json, null, 2)))
         }
         $('#commitProgress')[0].style.width = '0%'
         $('#commitWait').slideDown()
-        account.do_commit(messagetext, tree, on_fail, on_success, on_progress)
-        remove_event_callback(theStatusUpdater, callback_index)
-      })
-      theStatusUpdater.promise.then(function(w)
-      {
-        w.postMessage(
-          {name: "updatetranslated", value: translated, path: editor.filedata.path})
+        let result = account.do_commit(messagetext, tree, on_progress)
+        result.then(on_success).catch(on_fail)
       })
     }
 
@@ -250,11 +251,11 @@
     }
     function fill_search_results(results)
     {
-      var listHolder = $('#searchresult-holder')
+      let listHolder = $('#searchresult-holder')
       listHolder.html("")
-      var resultsList = new FileManager(listHolder[0], null, null,
+      let resultsList = new FileManager(listHolder[0], null, null,
         function(p){
-          var newwin = window.open(document.location + '?open='+escape(p))
+          let newwin = window.open(document.location + '?open='+escape(p))
           if (newwin)
             newwin.focus()
           else
@@ -266,8 +267,8 @@
     }
     function searchAssets(e, acc)
     {
-      var searchpattern = $('#searchstring').val()
-      var promised_substitutions = new Promise(function(ok, fail){
+      let searchpattern = $('#searchstring').val()
+      let promised_substitutions = new Promise(function(ok, fail){
         $.ajax({
           url: 'https://rawgit.com/SBT-community/Starbound_RU/web-interface/'+
             'translations/substitutions.json',
@@ -503,12 +504,27 @@
   </div><!--/Unsaved modal -->
 
   <script type="text/javascript">
-    var theStatusUpdater = {}
+    var theWorker = {}
     function adjust_floatside()
       {$('#sidebar').width($('#sidebar-placeholder').width())}
     $(document).ready(function()
     {
-      // Initialization
+      var authdata = get_authdata()
+      var account = new GHAccount(authdata, "SBT-community/Starbound_RU",
+        'web-interface')
+      if (authdata == false)
+      {
+        document.getElementById('auth-form').style.display = ''
+      }
+      else
+      {
+        login(account,authdata)
+      }
+
+      theWorker = new ProWorker(account)
+      theWorker.connect("getstatus", statusUpdateHandler)
+      var progressrefreshed = theWorker.send("refreshprogress")
+
       var editor = new theEditor($("#editor-holder-body").last(),
         $("#editor-navigator").last())
       adjust_floatside()
@@ -524,28 +540,8 @@
         editor.open_json(Base64.decode(json.content))
       }
 
-      var authdata = get_authdata()
-      var account = new GHAccount(authdata, "SBT-community/Starbound_RU",
-        'web-interface')
-      if (authdata == false)
-      {
-        document.getElementById('auth-form').style.display = ''
-      }
-      else
-      {
-        login(account,authdata)
-      }
-
       var filemanager = new FileManager($("#file-browser")[0],
         $("#fm-history")[0], account, on_file)
-      var callargs = get_call_arguments()
-      if (callargs.open)
-        filemanager.goto_path(unescape(callargs.open))
-      else
-        filemanager.goto_home()
-
-      theStatusUpdater = get_worker(account)
-      add_event_callback(theStatusUpdater, "setstatus", statusUpdateHandler)
 
       $('#perform-commit').on('click', function(){commit(account, editor)})
       $('#backtofm').on('click', function(){backtofm(editor);})
@@ -580,8 +576,14 @@
             return o;
           }, {}))
       })
-      theStatusUpdater.promise.then(function(w){ w.postMessage({name: 'getstatus',
-        id: 'global-progress', path: 'translations/'})})
+      progressrefreshed.then(function (){
+        var callargs = get_call_arguments()
+        if (callargs.open)
+          filemanager.goto_path(unescape(callargs.open))
+        else
+          filemanager.goto_home()
+        theWorker.send("setstatus",{id: 'global-progress', path: 'translations/'})
+      })
     })
   </script>
 </body>
