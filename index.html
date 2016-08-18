@@ -582,7 +582,7 @@
           filemanager.goto_path(unescape(callargs.open))
         else
           filemanager.goto_home()
-        theWorker.send("setstatus",{id: 'global-progress', path: 'translations/'})
+        theWorker.send("getstatus",{id: 'global-progress', path: 'translations/'})
       })
     })
   </script>
