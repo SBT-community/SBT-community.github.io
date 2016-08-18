@@ -46,9 +46,9 @@ function setTranslated(msg)
 {
   let path = msg.path.substring("translations/".length)
   oldvalue = accessByPath(translatedfiles, path)
-  if (oldvalue !== msg.n)
+  if (oldvalue !== msg.value)
   {
-    accessByPath(translatedfiles, path, msg.n)
+    console.log(accessByPath(translatedfiles, path, msg.value))
     return {needed: true, json: translatedfiles}
   }
   else
