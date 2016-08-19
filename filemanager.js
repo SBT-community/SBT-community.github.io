@@ -100,16 +100,10 @@ FileManager.prototype.track = function(path)
 FileManager.prototype.updateTree = function (file_json, path)
 {
   var fm = this
-  if (!($.isArray(file_json)))
-  {
-    this.on_file(file_json)
-    return
-  }
   if (path.length > 0)
   {
     this.track(path)
   }
-
   var offset = path.lastIndexOf("/")
   if (offset >= path_prefix.length - 1)
   {
@@ -147,6 +141,11 @@ FileManager.prototype.gotoPath = function (path)
   this.account.getJSON(this.account.get_repo_suffix() + "contents/" + path + '?ref=' +
     this.account.branch).then(
     function(json){
+      if (!($.isArray(json)))
+      {
+        fm.on_file(json)
+        return
+      }
       $(fm.table).find('tbody').html('')
       fm.updateTree(json, path)
     })
