@@ -249,55 +249,12 @@
       else
         obj.addClass('progress-bar-success')
     }
-    function fill_search_results(results)
-    {
-      let listHolder = $('#searchresult-holder')
-      listHolder.html("")
-      let resultsList = new FileManager(listHolder[0], null, null,
-        function(p){
-          let newwin = window.open(document.location + '?open='+escape(p))
-          if (newwin)
-            newwin.focus()
-          else
-            alert("Вы блокируете всплывающие окна на этом сайте, но при " +
-             "этом просите открыть файл... Не надо так!")
-        })
-      resultsList.update_tree(results, "")
-      $('#searchResults').modal()
-    }
     function searchAssets(e, acc)
     {
+      $('#searchresult-holder-fmtree').children("tbody").html("")//Clear previous results
       let searchpattern = $('#searchstring').val()
-      let promised_substitutions = new Promise(function(ok, fail){
-        $.ajax({
-          url: 'https://rawgit.com/SBT-community/Starbound_RU/web-interface/'+
-            'translations/substitutions.json',
-          success:ok,
-          error:fail,
-          type: "GET",
-          dataType: "json"
-        })
-      })
-      promised_substitutions.then(function(subs)
-      {
-        var results = []
-        for(k in subs)
-          if(k.indexOf(searchpattern) != -1)
-            for (i in subs[k])
-              if (!results.includes(subs[k][i]))
-                results.push(subs[k][i])
-        return results.map(function(p){
-          return {
-                  path: 'translations/' + p,
-                  name: p.slice('texts/'.length),
-                  size: 0,
-                  type: "file"
-                }
-        })
-      }).then(fill_search_results).catch(function(e){
-        console.log(e)
-        alert("Cann't perform search!")
-      })
+      theWorker.justSend("searchfilename", {pattern: searchpattern})
+      $('#searchResults').modal()
     }
     function searchFilename(e, acc) {alert('Not implemented yet')}
     function searchContent(e, acc) {alert('Not implemented yet')}
@@ -576,12 +533,33 @@
             return o;
           }, {}))
       })
+
+      let listHolder = $('#searchresult-holder')
+      let resultsList = new FileManager(listHolder[0], null, null,
+        function(p){
+          let newwin = window.open(document.location + '?open='+escape(p))
+          if (newwin)
+            newwin.focus()
+          else
+            alert("Вы блокируете всплывающие окна на этом сайте, но при " +
+             "этом просите открыть файл... Не надо так!")
+        })
+      theWorker.connect("foundresult", function(data)
+      {
+        resultsList.updateTree([{
+          name: data.slice("texts/".length),
+          size: 0,
+          path: "translations/" + data,
+          type: "file"
+        }], "")
+      })
+
       progressrefreshed.then(function (){
         var callargs = get_call_arguments()
         if (callargs.open)
-          filemanager.goto_path(unescape(callargs.open))
+          filemanager.gotoPath(unescape(callargs.open))
         else
-          filemanager.goto_home()
+          filemanager.gotoHome()
         theWorker.send("getstatus",{id: 'global-progress', path: 'translations/'})
       })
     })

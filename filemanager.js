@@ -1,5 +1,4 @@
 
-const filetreeid = 'fmtree'
 const path_prefix = "translations/texts"
 
 function FileManager(holder, navigator, account, on_file)
@@ -9,7 +8,7 @@ function FileManager(holder, navigator, account, on_file)
   this.table = {}
   this.table = document.createElement('table')
   this.table.className = "table table-responsive table-hover"
-  this.table.setAttribute("id", filetreeid)
+  this.table.id = holder.id + "-fmtree"
   this.table.createTBody()
   this.holder.appendChild(this.table)
   this.account = account
@@ -17,7 +16,7 @@ function FileManager(holder, navigator, account, on_file)
 }
 
 
-FileManager.prototype.add_file = function(name, type, on_click)
+FileManager.prototype.addFile = function(name, type, on_click)
 {
   var row = this.table.insertRow()
   var img = row.insertCell()
@@ -66,7 +65,7 @@ FileManager.prototype.track = function(path)
   var fm = this
   let parts = path.slice(path_prefix.length).split('/')
   var curparts = $(this.navigator).children().toArray()
-  function make_link(thepath, i)
+  function makeLink(thepath, i)
   {
     var offset = path_prefix.length
     for (k=i;k >= 0;k--)
@@ -76,7 +75,7 @@ FileManager.prototype.track = function(path)
     let reduced = thepath.slice(0, offset)
     return function()
     {
-      fm.goto_path(reduced)
+      fm.gotoPath(reduced)
     }
   }
   for (i in parts)
@@ -86,7 +85,7 @@ FileManager.prototype.track = function(path)
     if (curparts.length <= i)
     {
       $(this.navigator).append('<li>'+parts[i]+'</li>').children().last()
-        .on('click', make_link(path, i))
+        .on('click', makeLink(path, i))
       continue
     }
     if ($(curparts[i]).text() != parts[i])
@@ -98,7 +97,7 @@ FileManager.prototype.track = function(path)
   $(this.navigator).children().last().addClass('active')
 }
 
-FileManager.prototype.update_tree = function (file_json, path)
+FileManager.prototype.updateTree = function (file_json, path)
 {
   var fm = this
   if (!($.isArray(file_json)))
@@ -110,7 +109,6 @@ FileManager.prototype.update_tree = function (file_json, path)
   {
     this.track(path)
   }
-  $(this.table).find('tbody').html('')
 
   var offset = path.lastIndexOf("/")
   if (offset >= path_prefix.length - 1)
@@ -121,24 +119,24 @@ FileManager.prototype.update_tree = function (file_json, path)
     {
       prev_path = prev_path + path.slice(offset)
     }
-    fm.add_file( "..", "up",function()
+    fm.addFile( "..", "up",function()
       {
-        fm.goto_path(prev_path)
+        fm.gotoPath(prev_path)
       })
   }
   $.each(file_json, function(i, e)
     {
       if (e.size >= 1024000)
       {return}
-      pbid = fm.add_file(e.name, e.type, function()
+      pbid = fm.addFile(e.name, e.type, function()
         {
-          fm.goto_path(e.path)
+          fm.gotoPath(e.path)
         })
       theWorker.justSend("getstatus", {id:pbid, path:e.path})
     })
 }
 
-FileManager.prototype.goto_path = function (path)
+FileManager.prototype.gotoPath = function (path)
 {
   var fm = this
   if (!this.account)
@@ -149,13 +147,14 @@ FileManager.prototype.goto_path = function (path)
   this.account.getJSON(this.account.get_repo_suffix() + "contents/" + path + '?ref=' +
     this.account.branch).then(
     function(json){
-      fm.update_tree(json, path)
+      $(fm.table).find('tbody').html('')
+      fm.updateTree(json, path)
     })
 }
 
-FileManager.prototype.goto_home = function ()
+FileManager.prototype.gotoHome = function ()
 {
-  this.goto_path(path_prefix)
+  this.gotoPath(path_prefix)
 }
 
 

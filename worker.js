@@ -2,12 +2,13 @@ importScripts("githubapi.js", "https://rawgit.com/dankogai/js-base64/master/base
 
 var totalfiles = {}
 var translatedfiles = {}
+var substitutions = {}
 
 pathregex = /\/?([^\/]+)\/(.+)/
 
 function sumUp(counter)
 {
-  var result = 0
+  let result = 0
   if (typeof counter == "number")
   {
     return counter
@@ -63,9 +64,47 @@ function handleStatus(data)
   return {id: data.id, val: value}
 }
 
-function findPath(data)
+function loadSubstitutions(force)
 {
-  
+  if (Object.keys(substitutions).length !== 0 && ! force)
+    return Promise.resolve(substitutions)
+  let result = new Promise(function(ok, fail){
+    let ajax = new XMLHttpRequest()
+    ajax.open("GET", 'https://rawgit.com/SBT-community/Starbound_RU/web-interface/'+
+        'translations/substitutions.json', true)
+    ajax.onerror = fail
+    ajax.onload = function () {
+      if (ajax.status >= 400)
+        fail(ajax.getAllResponseHeaders(), ajax.statusText, ajax.response)
+      else
+        ok(ajax.response);
+    };
+    ajax.send();
+  })
+  return result.then(function(answer)
+  {
+    substitutions = JSON.parse(answer);
+    return substitutions
+  })
+}
+
+function findPath(data, acc)
+{
+  let promised_substitutions = loadSubstitutions()
+  let results = []
+  promised_substitutions.then(function(subs)
+  {
+    for(k in subs)
+      if(k.indexOf(data.pattern) != -1)
+        for (i in subs[k])
+          if (!results.includes(subs[k][i]))
+          {
+            results.push(subs[k][i])
+            postMessage({name:"foundresult", msg: subs[k][i]})
+          }
+  }).catch(function(e){
+    console.log(e)
+  })
 }
 
 function refreshProgress(data, account)
@@ -73,11 +112,11 @@ function refreshProgress(data, account)
   let thedate = new Date()
   let prefix = account.get_repo_suffix() + "contents/translations/"
   let postfix = "?ref="+account.branch+"&current_time=" + thedate.getTime()
-  var totprom = account.getJSON(prefix + "totallabels.json"+postfix).then(
+  let totprom = account.getJSON(prefix + "totallabels.json"+postfix).then(
     function(prp_json){
       totalfiles = JSON.parse(Base64.decode(prp_json.content))
     })
-  var trprom = account.getJSON(prefix + "translatedlabels.json"+postfix).then(
+  let trprom = account.getJSON(prefix + "translatedlabels.json"+postfix).then(
     function(prp_json){
       translatedfiles = JSON.parse(Base64.decode(prp_json.content))
     })
@@ -86,7 +125,7 @@ function refreshProgress(data, account)
 
 handlers = {
   "getstatus": handleStatus,
-  "search": findPath,
+  "searchfilename": findPath,
   "updatetranslated": setTranslated,
   "refreshprogress": refreshProgress
 }
