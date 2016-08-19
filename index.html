@@ -249,14 +249,13 @@
       else
         obj.addClass('progress-bar-success')
     }
-    function searchAssets(e, acc)
+    function searchFilename(e, acc)
     {
       $('#searchresult-holder-fmtree').children("tbody").html("")//Clear previous results
       let searchpattern = $('#searchstring').val()
       theWorker.justSend("searchfilename", {pattern: searchpattern})
       $('#searchResults').modal()
     }
-    function searchFilename(e, acc) {alert('Not implemented yet')}
     function searchContent(e, acc) {alert('Not implemented yet')}
   </script>
 </head>
@@ -276,23 +275,18 @@
     <div class='col-sm-6'>
       <form class="input-group" id='search-form' style='margin: 20px 0;'>
         <span class='input-group-btn'>
-          <button type='submit' title="Поиск по имени файла"
-            class='btn btn-default' id='do_search'>
+          <button type='submit' title="" class='btn btn-default' id='do_search'>
           <span class='glyphicon glyphicon-search'></span></button>
           <button class='btn btn-default dropdown-toggle' data-toggle="dropdown"
             aria-haspopup="true" aria-expanded="false">
           <span class='caret'></span></button>
           <ul id='search-vars' class='dropdown-menu'>
-            <li class='disabled' id='searchcontent'>
-            <a href='javascript:void(0);'>Поиск по содержанию файла</a></li>
-            <li class='disabled' id='searchfilename'>
-            <a href='javascript:void(0);'>Поиск по имени файла</a></li>
-            <li id='searchassets'>
-            <a href='javascript:void(0);'>Поиск по имени файла ресурса игры</a></li>
+            <li class='disabled' id='searchcontent'><a href='javascript:void(0);'>Поиск по содержанию файла</a></li>
+            <li class='disabled' id='searchfilename'><a href='javascript:void(0);'>Поиск по имени файла или ресурса игры</a></li>
           </ul>
         </span>
-        <input type="text" id='searchstring' class="form-control"
-        placeholder="Поиск по имени файла"></input>
+        <input type="text" id='searchstring' class="form-control" placeholder="">
+        </input>
       </form>
     </div>
   </div>
@@ -521,9 +515,8 @@
         })
       }
       bindEngineSelectHandler('content', searchContent)
-      bindEngineSelectHandler('assets', searchAssets)
       bindEngineSelectHandler('filename', searchFilename)
-      $('#searchassets').click()
+      $('#searchfilename').click()
       $('#auth-form').submit( function(event)
       {
         event.preventDefault()

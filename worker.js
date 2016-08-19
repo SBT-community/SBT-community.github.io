@@ -88,10 +88,33 @@ function loadSubstitutions(force)
   })
 }
 
+function findInFiles(obj, prepath, pattern, callback)
+{
+  let results = []
+  let sep = "/"
+  if (prepath.length == 0)
+    sep = ""
+  for (f in obj)
+  {
+    let newprepath = prepath + sep + f
+    if (typeof obj[f] == "object")
+      results = results.concat(findInFiles(obj[f], newprepath, pattern, callback))
+    else if (newprepath.indexOf(pattern) >= 0)
+    {
+      results.push(newprepath)
+      callback(newprepath)
+    }
+  }
+  return results
+}
+
 function findPath(data, acc)
 {
   let promised_substitutions = loadSubstitutions()
-  let results = []
+  let results = findInFiles(totalfiles, "", data.pattern, function(p)
+  {
+    postMessage({name:"foundresult", msg: p})
+  })
   promised_substitutions.then(function(subs)
   {
     for(k in subs)
