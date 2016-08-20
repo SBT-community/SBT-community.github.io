@@ -160,6 +160,12 @@
 
     function commit(account, editor)
     {
+      let noconflict = account.getJSON(editor.filedata.url.slice(api_prefix.length))
+        .then(function(updated)
+        {
+          if (updated.sha != editor.filedata.sha)
+            throw updated
+        })
       let progressrefreshed = theWorker.send("refreshprogress")
       let obj = editor.get_json()
       let translated = 0
@@ -172,7 +178,6 @@
           translated++
         }
       }
-
       let content = JSON.stringify(obj, null, 2)
       if (!account.authdata.uname)
       {return}
@@ -213,8 +218,14 @@
           JSON.stringify(d, null, 2)
         $('#commitFailed').slideDown().delay(10000).slideUp()
       }
-
-      let translation_updated = progressrefreshed.then(function()
+      noconflict.catch(function(upd)
+      {
+        alert("Этот файл уже был кем-то изменён пока редактировался Вами!!!" +
+          "Очень сожалею, но Ваши изменения придется отбросить. Я уже работаю над" +
+          " решением этой проблемы...")
+      })
+      let translation_updated = Promise.all([progressrefreshed, noconflict])
+        .then(function()
       {
         return theWorker.send("updatetranslated",
           {value: translated, path: editor.filedata.path})
