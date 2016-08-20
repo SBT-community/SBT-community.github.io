@@ -49,7 +49,7 @@ function setTranslated(msg)
   oldvalue = accessByPath(translatedfiles, path)
   if (oldvalue !== msg.value)
   {
-    console.log(accessByPath(translatedfiles, path, msg.value))
+    accessByPath(translatedfiles, path, msg.value)
     return {needed: true, json: translatedfiles}
   }
   else
@@ -130,6 +130,23 @@ function findPath(data, acc)
   })
 }
 
+function findCode(data, acc)
+{
+  let req = escape(data.pattern + " repo:Starbound_RU user:SBT-community "+
+    "path:translations/texts")
+
+  let results = acc.getJSON("search/code?q="+req+"")
+  results.then(function(answer){
+    for (i in answer.items)
+    {
+      postMessage({
+        name:"foundresult",
+        msg: answer.items[i].path.slice('translations/'.length)
+      })
+    }
+  })
+}
+
 function refreshProgress(data, account)
 {
   let thedate = new Date()
@@ -149,6 +166,7 @@ function refreshProgress(data, account)
 handlers = {
   "getstatus": handleStatus,
   "searchfilename": findPath,
+  "searchcontent": findCode,
   "updatetranslated": setTranslated,
   "refreshprogress": refreshProgress
 }
