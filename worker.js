@@ -132,7 +132,7 @@ function findPath(data, acc)
 
 function findCode(data, acc)
 {
-  let req = escape(data.pattern + " repo:Starbound_RU user:SBT-community "+
+  let req = encodeURI(data.pattern + " repo:Starbound_RU user:SBT-community "+
     "path:translations/texts")
 
   let results = acc.getJSON("search/code?q="+req+"")
