@@ -163,7 +163,7 @@
       let noconflict = account.getJSON(editor.filedata.url.slice(api_prefix.length))
         .then(function(updated)
         {
-          if (updated.sha != editor.filedata.sha)
+          if (updated.content !== editor.filedata.content)
             throw updated
         })
       let progressrefreshed = theWorker.send("refreshprogress")
