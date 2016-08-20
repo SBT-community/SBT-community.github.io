@@ -215,14 +215,44 @@
           "сохранения изменений произошла ошибка: " +
           (errorThrown ? errorThrown: "неизвестная ошибка" ) + " статус: " +
           (status ? status: "неизвестен" ) + ". Дополнительная информация:\n" +
-          JSON.stringify(d, null, 2)
+          JSON.stringify({ajax:d}, null, 2)
         $('#commitFailed').slideDown().delay(10000).slideUp()
       }
       noconflict.catch(function(upd)
       {
-        alert("Этот файл уже был кем-то изменён пока редактировался Вами!!!" +
-          "Очень сожалею, но Ваши изменения придется отбросить. Я уже работаю над" +
-          " решением этой проблемы...")
+        function makeResolver(pref)
+        {
+          return function()
+          {
+            let result = []
+            let upd_json = JSON.parse(Base64.decode(upd.content))
+            let tbl = {
+              0: upd_json,
+              2: obj
+            }
+            if (obj.length !== upd_json.length)
+            {
+              alert('Файлы не могут быть совмещены! Возможно произошло обновление '+
+                'базы данных. Ваши изменения будут отброшены.')
+              result = upd_json
+            }
+            else
+            {
+              for (i in obj)
+              {
+                result.push($.extend(true, {}, tbl[1-pref][i], tbl[1+pref][i]))
+              }
+            }
+            editor.reset()
+            editor.filedata = upd
+            editor.json_onload(result)
+          }
+        }
+        $('#prefermine').off('click')
+        $('#prefermine').on('click', makeResolver(1))
+        $('#preferother').off('click')
+        $('#preferother').on('click', makeResolver(-1))
+        $('#conflictMessage').modal()
       })
       let translation_updated = Promise.all([progressrefreshed, noconflict])
         .then(function()
@@ -432,6 +462,31 @@
   </div>
   </div>
   </div><!--/Commit modal -->
+
+  <!--Conflict modal -->
+  <div id='conflictMessage' class='modal fade' role='dialog'>
+  <div class='modal-dialog modal-lg'>
+  <div class='modal-content'>
+  <div class='modal-header'>
+    <h4 class="modal-title">Файл был изменен другим переводчиком!</h4>
+  </div>
+  <div class='modal-body'>
+    <p id='generalconflict'>Файл, который Вы пытаетесь сохранить, был изменен
+    другим переводчиком. Сейчас произойдет попытка автоматического слияния изменений,
+    но возможны конфликты. Как следует поступить при возникновении конфликта?</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-warning" id='prefermine'
+    data-dismiss="modal">
+    Записать мой перевод</button>
+    <button type="button" class="btn btn-warning" data-dismiss="modal"
+    id='preferother'>Записать перевод другого переводчика</button>
+    <button type="button" class="btn btn-success disabled" data-dismiss="modal"
+    id='manualsolve' title="Скоро...">Ручное разрешение конфликта</button>
+  </div>
+  </div>
+  </div>
+  </div><!--/Conflict modal -->
 
   <!--Unsaved modal -->
   <div id='unsavedMessage' class='modal fade' role='dialog'>
