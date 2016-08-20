@@ -10,25 +10,6 @@ function setAuthData(xhr, authdata)
   }
 }
 
-function request(url, type, data, authdata)
-{
-  result = new Promise( function(ok, fail)
-  {
-    let ajax = new XMLHttpRequest()
-    ajax.open(type, api_prefix + url, true)
-    ajax.onerror = fail
-    ajax.onload = function () {
-      if (ajax.status >= 400)
-        fail(ajax.getAllResponseHeaders(), ajax.statusText, ajax.response)
-      else
-        ok(ajax.response);
-    };
-    setAuthData(ajax, authdata)
-    ajax.send(data);
-  })
-  return result.then(function(answer){return JSON.parse(answer)})
-}
-
 function GHAccount(authdata, repo, branch)
 {
   this.authdata = authdata
@@ -36,15 +17,44 @@ function GHAccount(authdata, repo, branch)
   this.branch = branch
 }
 
+GHAccount.prototype.request = function(url, type, data, onprogress)
+{
+  let acc = this
+  result = new Promise( function(ok, fail)
+  {
+    let ajax = new XMLHttpRequest()
+    ajax.open(type, api_prefix + url, true)
+    ajax.onerror = fail
+    if (typeof onprogress == "function")
+      ajax.onprogress = function(pe)
+      {
+        if (pe.lengthComputable)
+          onprogress(pe.loaded/pe.total)
+        else
+          onprogress(1)
+      }
+    ajax.onload = function () {
+      if (ajax.status >= 400)
+        fail(ajax, ajax.status, ajax.responseText)
+      else
+        ok(ajax.response);
+    };
+    setAuthData(ajax, acc.authdata)
+    ajax.send(data);
+  })
+  return result.then(function(answer){return JSON.parse(answer)})
+}
+
 GHAccount.prototype.check_authdata = function (authdata, on_success, on_fail)
 {
   var acc = this
-  let authed = request("user", "GET", {}, authdata)
-  authed.then(function(a)
-    {
-      acc.authdata = authdata
-      on_success(a)
-    }).catch(on_fail)
+  acc.authdata = authdata
+  let authed = acc.request("user", "GET", {})
+  authed.then(on_success).catch(function(a)
+  {
+    acc.authdata = {}
+    on_fail(a)
+  })
 }
 
 GHAccount.prototype.get_repo_suffix = function()
@@ -52,9 +62,9 @@ GHAccount.prototype.get_repo_suffix = function()
   return "repos/" + this.targetrepo + '/'
 }
 
-GHAccount.prototype.getJSON = function (url, data)
+GHAccount.prototype.getJSON = function (url, data, onprogress)
 {
-  return request(url, "GET", data, this.authdata)
+  return this.request(url, "GET", data, onprogress)
 }
 
 function make_tree_entry(path, string_content)
@@ -74,7 +84,7 @@ GHAccount.prototype.make_tree_blob = function (string_content)
     content: string_content,
     encoding: "utf-8"
   }
-  return request(prefix + "/git/blobs", "POST", JSON.stringify(req), this.authdata)
+  return this.request(prefix + "/git/blobs", "POST", JSON.stringify(req))
 }
 
 GHAccount.prototype.do_commit = function (msg, filetree, on_progress)
@@ -83,12 +93,13 @@ GHAccount.prototype.do_commit = function (msg, filetree, on_progress)
   var acc = this
   var commit_sha = ""
   var head_json_promise = this.getJSON(this.get_repo_suffix() + "git/refs/heads/" +
-    this.branch)
+    this.branch, {}, function(p){on_progress(20*p)})
   var commit_json_promise = head_json_promise.then(function(ref_json)
     {
       commit_sha = ref_json.object.sha
       on_progress(20)
-      return acc.getJSON( acc.get_repo_suffix() + "git/commits/" + commit_sha)
+      return acc.getJSON( acc.get_repo_suffix() + "git/commits/" + commit_sha, {},
+      function(p){on_progress(20*p + 20)})
     })
   var new_tree_promise = Promise.resolve(commit_json_promise)
     .then(function(com_json)
@@ -98,8 +109,8 @@ GHAccount.prototype.do_commit = function (msg, filetree, on_progress)
         tree: filetree
       }
       on_progress(40)
-      return request(acc.get_repo_suffix() + "git/trees", "POST",
-        JSON.stringify(new_tree), authdata)
+      return acc.request(acc.get_repo_suffix() + "git/trees", "POST",
+        JSON.stringify(new_tree), function(p){on_progress(20*p + 40)})
     })
   var new_commit_promise = Promise.resolve(new_tree_promise).then(
     function(tree_json)
@@ -115,15 +126,16 @@ GHAccount.prototype.do_commit = function (msg, filetree, on_progress)
         commit_body.commiter = {name: authdata.uname, email: authdata.email}
       }
       on_progress(60)
-      return request(acc.get_repo_suffix() + "git/commits", "POST",
-        JSON.stringify(commit_body), authdata)
+      return acc.request(acc.get_repo_suffix() + "git/commits", "POST",
+        JSON.stringify(commit_body), function(p){on_progress(20*p + 60)})
     })
   var updated_head_promise = Promise.resolve(new_commit_promise).then(
     function(commit_json)
     {
       on_progress(80)
-      return request(acc.get_repo_suffix() + "git/refs/heads/" + acc.branch, "PATCH",
-        JSON.stringify({sha:commit_json.sha}), authdata)
+      return acc.request(acc.get_repo_suffix() + "git/refs/heads/" + acc.branch,
+        "PATCH", JSON.stringify({sha:commit_json.sha}),
+        function(p){on_progress(20*p + 80)})
     })
   return updated_head_promise.then(function(upd_head)
   {
