@@ -197,7 +197,7 @@
         $('#commitSuccess').slideDown().delay(2000).slideUp()
         theWorker.justSend("getstatus", {
             path: editor.filedata.path,
-            id: "progress-" + editor.filedata.name
+            id: "file-browser-progress-" + editor.filedata.name.replace(/[\./]/g, '-')
           })
       }
       function on_fail(d, status, errorThrown)
