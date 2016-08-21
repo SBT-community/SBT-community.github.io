@@ -158,6 +158,34 @@
       return {uname : uname, upass: upass}
     }
 
+    function manual_resolve(mine, other)
+    {
+      return new Promise(function(ok, fail){
+        let result = $.extend(true, {}, mine, other)
+        if (other.Texts.Rus && mine.Texts.Rus && mine.Texts.Rus != other.Texts.Rus
+          && mine.Texts.Rus.length != 0 && other.Texts.Rus.length != 0)
+        {
+          $('#generalconflict').slideUp()
+          $('#manualsolve').slideUp()
+          $('#particularconflict').slideDown()
+          $('#mineconflict').text(mine.Texts.Rus)
+          $('#otherconflict').text(other.Texts.Rus)
+          $('#prefermine').off('click')
+          $('#prefermine').on('click', function(){
+            result.Texts.Rus = mine.Texts.Rus
+            ok(result)
+          })
+          $('#preferother').off('click')
+          $('#preferother').on('click', function(){
+            result.Texts.Rus = other.Texts.Rus
+            ok(result)
+          })
+        }
+        else
+          ok(result)
+      })
+    }
+
     function commit(account, editor)
     {
       let noconflict = account.getJSON(editor.filedata.url.slice(api_prefix.length))
@@ -167,24 +195,19 @@
             throw updated
         })
       let progressrefreshed = theWorker.send("refreshprogress")
-      let obj = editor.get_json()
+      let newjson = editor.get_json()
       let translated = 0
-      for (i in obj)
+      for (i in newjson)
       {
-        var field = obj[i]
+        var field = newjson[i]
         if (typeof field['Texts']['Rus'] == "string" &&
           field['Texts']['Rus'].length > 0)
-        {
           translated++
-        }
       }
-      let content = JSON.stringify(obj, null, 2)
-      if (!account.authdata.uname)
-      {return}
+      let content = JSON.stringify(newjson, null, 2)
+      if (!account.authdata.uname) {return}
       let messagetext = $('#commitMessageText')[0].value
-      if (messagetext.length == 0)
-      {messagetext = 'Обновление ' + editor.filedata.path}
-
+      if (messagetext.length == 0) {messagetext = 'Обновление ' + editor.filedata.path}
       let tree = []
       tree.push(make_tree_entry(editor.filedata.path, content))
       function on_progress(progress)
@@ -225,7 +248,15 @@
           return function()
           {
             let result = []
+            function finish(p)
+            {
+              $('#conflictMessage').modal('hide')
+              editor.reset()
+              editor.filedata = upd
+              editor.json_onload(result)
+            }
             let upd_json = JSON.parse(Base64.decode(upd.content))
+            let obj = editor.get_json()
             let tbl = {
               0: upd_json,
               2: obj
@@ -236,22 +267,35 @@
                 'базы данных. Ваши изменения будут отброшены.')
               result = upd_json
             }
-            else
+            else if (pref == 0)
             {
-              for (i in obj)
+              function makeManSolver(ii)
               {
-                result.push($.extend(true, {}, tbl[1-pref][i], tbl[1+pref][i]))
+                return function(p){
+                  return manual_resolve(obj[ii], upd_json[ii])
+                    .then(function(r){result.push(r)})
+                }
               }
+              let last_pr = {}
+              for (i in obj)
+                last_pr = Promise.resolve(last_pr).then(makeManSolver(i))
+              Promise.resolve(last_pr).then(finish).catch(alert)
+              return
             }
-            editor.reset()
-            editor.filedata = upd
-            editor.json_onload(result)
+            else
+              for (i in obj)
+                result.push($.extend(true, {}, tbl[1-pref][i], tbl[1+pref][i]))
+            finish()
           }
         }
         $('#prefermine').off('click')
         $('#prefermine').on('click', makeResolver(1))
         $('#preferother').off('click')
         $('#preferother').on('click', makeResolver(-1))
+        $('#manualsolve').on('click', makeResolver(0))
+        $('#manualsolve').slideDown()
+        $('#generalconflict').slideDown()
+        $('#particularconflict').slideUp()
         $('#conflictMessage').modal()
       })
       let translation_updated = Promise.all([progressrefreshed, noconflict])
@@ -264,10 +308,8 @@
       Promise.resolve(translation_updated).then(function(data)
       {
         if (data.needed)
-        {
           tree.push(make_tree_entry("translations/translatedlabels.json",
             JSON.stringify(data.json, null, 2)))
-        }
         $('#commitProgress')[0].style.width = '0%'
         $('#commitWait').slideDown()
         let result = account.do_commit(messagetext, tree, on_progress)
@@ -474,15 +516,19 @@
     <p id='generalconflict'>Файл, который Вы пытаетесь сохранить, был изменен
     другим переводчиком. Сейчас произойдет попытка автоматического слияния изменений,
     но возможны конфликты. Как следует поступить при возникновении конфликта?</p>
+    <div id="particularconflict" style="display: none" class="row">
+    <div class="col-sm-6"><h4>Мой перевод:</h4><p id="mineconflict"></p></div>
+    <div class="col-sm-6"><h4>Перевод другого переводчика:</h4>
+    <p id="otherconflict"></p></div>
+    </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-warning" id='prefermine'
-    data-dismiss="modal">
+    <button type="button" class="btn btn-warning" id='prefermine'>
     Записать мой перевод</button>
-    <button type="button" class="btn btn-warning" data-dismiss="modal"
+    <button type="button" class="btn btn-warning"
     id='preferother'>Записать перевод другого переводчика</button>
-    <button type="button" class="btn btn-success disabled" data-dismiss="modal"
-    id='manualsolve' title="Скоро...">Ручное разрешение конфликта</button>
+    <button type="button" class="btn btn-success"
+    id='manualsolve'>Ручное разрешение конфликта</button>
   </div>
   </div>
   </div>
