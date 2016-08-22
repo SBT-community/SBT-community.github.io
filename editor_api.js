@@ -9,6 +9,10 @@ const schema = {
     type: "object",
     format: "table",
     properties: {
+      "Comment":{
+        type: "string",
+        title: "Комментарий"
+      },
       "DeniedAlternatives":{
         type: "array",
         format: "table",
@@ -190,6 +194,7 @@ theEditor.prototype.load_part = function (start)
     }
   }
   $(this.holder).find("[name$=\"[Eng]\"]").each(function(i,d){d.readOnly=true})
+  $(this.holder).find("[name$=\"[Comment]\"]").each(function(i,d){d.readOnly=true})
   $(this.holder).find("textarea[name$=\"]\"]").each(function(i,d){
       d.className = 'input-lg form-control'
       if (d.value.length != 0)
