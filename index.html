@@ -205,6 +205,8 @@
           translated++
       }
       let content = JSON.stringify(newjson, null, 2)
+      if ((! editor.touched) || Base64.decode(editor.filedata.content) == content)
+      {return}
       if (!account.authdata.uname) {return}
       let messagetext = $('#commitMessageText')[0].value
       if (messagetext.length == 0) {messagetext = 'Обновление ' + editor.filedata.path}
