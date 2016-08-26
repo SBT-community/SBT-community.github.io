@@ -24,7 +24,7 @@ GHAccount.prototype.request = function(url, type, data, onprogress)
   {
     let ajax = new XMLHttpRequest()
     ajax.open(type, api_prefix + url, true)
-    ajax.onerror = fail
+    ajax.onerror = function(stat) {fail(ajax, stat, "ошибка подключения")}
     if (typeof onprogress == "function")
       ajax.onprogress = function(pe)
       {

@@ -232,6 +232,7 @@
       }
       function on_fail(d, status, errorThrown)
       {
+        let t = this
         $('#commitWait').slideUp()
         console.log(d)
         console.log(status)
@@ -240,7 +241,7 @@
           "сохранения изменений произошла ошибка: " +
           (errorThrown ? errorThrown: "неизвестная ошибка" ) + " статус: " +
           (status ? status: "неизвестен" ) + ". Дополнительная информация:\n" +
-          JSON.stringify({ajax:d}, null, 2)
+          JSON.stringify({ajax:d, self:t}, null, 2)
         $('#commitFailed').slideDown().delay(10000).slideUp()
       }
       noconflict.catch(function(upd)
