@@ -90,21 +90,21 @@ GHAccount.prototype.make_tree_blob = function (string_content)
 GHAccount.prototype.do_commit = function (msg, filetree, on_progress)
 {
   let authdata = this.authdata
-  var acc = this
-  var commit_sha = ""
-  var head_json_promise = this.getJSON(this.get_repo_suffix() + "git/refs/heads/" +
+  let acc = this
+  let commit_sha = ""
+  let head_json_promise = this.getJSON(this.get_repo_suffix() + "git/refs/heads/" +
     this.branch, {}, function(p){on_progress(20*p)})
-  var commit_json_promise = head_json_promise.then(function(ref_json)
+  let commit_json_promise = head_json_promise.then(function(ref_json)
     {
       commit_sha = ref_json.object.sha
       on_progress(20)
       return acc.getJSON( acc.get_repo_suffix() + "git/commits/" + commit_sha, {},
       function(p){on_progress(20*p + 20)})
     })
-  var new_tree_promise = Promise.resolve(commit_json_promise)
+  let new_tree_promise = Promise.resolve(commit_json_promise)
     .then(function(com_json)
     {
-      var new_tree = {
+      let new_tree = {
         base_tree: com_json.tree.sha,
         tree: filetree
       }
@@ -112,10 +112,10 @@ GHAccount.prototype.do_commit = function (msg, filetree, on_progress)
       return acc.request(acc.get_repo_suffix() + "git/trees", "POST",
         JSON.stringify(new_tree), function(p){on_progress(20*p + 40)})
     })
-  var new_commit_promise = Promise.resolve(new_tree_promise).then(
+  let new_commit_promise = Promise.resolve(new_tree_promise).then(
     function(tree_json)
     {
-      var commit_body = {
+      let commit_body = {
         message: msg,
         tree: tree_json.sha,
         parents: [commit_sha]
@@ -129,7 +129,7 @@ GHAccount.prototype.do_commit = function (msg, filetree, on_progress)
       return acc.request(acc.get_repo_suffix() + "git/commits", "POST",
         JSON.stringify(commit_body), function(p){on_progress(20*p + 60)})
     })
-  var updated_head_promise = Promise.resolve(new_commit_promise).then(
+  let updated_head_promise = Promise.resolve(new_commit_promise).then(
     function(commit_json)
     {
       on_progress(80)
