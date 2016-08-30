@@ -1,5 +1,5 @@
 importScripts("githubapi.js", "https://rawgit.com/dankogai/js-base64/master/base64.min.js")
-
+"use strict";
 var totalfiles = {}
 var translatedfiles = {}
 var substitutions = {}

@@ -1,4 +1,4 @@
-
+"use strict";
 const api_prefix = "https://api.github.com/"
 
 function setAuthData(xhr, authdata)
@@ -20,7 +20,7 @@ function GHAccount(authdata, repo, branch)
 GHAccount.prototype.request = function(url, type, data, onprogress)
 {
   let acc = this
-  result = new Promise( function(ok, fail)
+  let result = new Promise( function(ok, fail)
   {
     let ajax = new XMLHttpRequest()
     ajax.open(type, api_prefix + url, true)

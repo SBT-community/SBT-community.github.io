@@ -1,4 +1,4 @@
-
+"use strict";
 
 const editors_per_page = 25
 const schema = {

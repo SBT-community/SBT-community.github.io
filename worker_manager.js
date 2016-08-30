@@ -1,4 +1,4 @@
-
+"use strict";
 function ProWorker(account)
 {
   this.worker = new Worker('worker.js')
@@ -7,7 +7,7 @@ function ProWorker(account)
   var pw = this
   this.worker.onmessage = function(msg)
   {
-    for (i in pw.mhandlers[msg.data.name])
+    for (let i in pw.mhandlers[msg.data.name])
       pw.mhandlers[msg.data.name][i](msg.data.msg)
   }
 }
