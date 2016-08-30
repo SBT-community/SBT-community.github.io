@@ -39,6 +39,7 @@
   }
   </style>
   <script type="text/javascript">
+    "use strict";
     JSONEditor.defaults.options.theme = 'bootstrap3';
     JSONEditor.defaults.options.iconlib = "bootstrap3";
     JSONEditor.defaults.options.disable_array_delete_all_rows = true;
@@ -71,7 +72,7 @@
       var pairs = {}
       $.each(params, function(i, d)
         {
-          r = d.split('=')
+          let r = d.split('=')
           pairs[r[0]] = r[1]
         })
       return pairs
@@ -565,6 +566,7 @@
   </div><!--/Unsaved modal -->
 
   <script type="text/javascript">
+    "use strict";
     var theWorker = {}
     function adjust_floatside()
       {$('#sidebar').width($('#sidebar-placeholder').width())}
