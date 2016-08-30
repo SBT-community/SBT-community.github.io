@@ -92,7 +92,7 @@ function check_codex_length(text, after_check)
   let width = maxwidth
   let height = 17 - 1 // first string taken anyway
   let splited = text.split(/([^\t\s\n\r]+|\r?\n)/)
-  for (s in splited)
+  for (let s in splited)
   {
     if (splited[s].length == 0 || splited[s].match(/\^.+;/))
       continue
@@ -179,13 +179,13 @@ theEditor.prototype.load_part = function (start)
       }
       return function(first)
       {
-        var curval = ed.subeditors[ii].getEditor('root.Texts.Rus').getValue()
+        let curval = ed.subeditors[ii].getEditor('root.Texts.Rus').getValue()
         check_codex_length(curval, after_check)
         ed.touched = true
         if (first){ ed.touched = false}
       }
     }
-    ccheck = generate_codex_checker(i)
+    let ccheck = generate_codex_checker(i)
     ccheck(true)
     subeditor.watch('root.Texts.Rus', ccheck)
     if (this.json[i]['Texts']['Rus'] === "")
@@ -205,7 +205,7 @@ theEditor.prototype.load_part = function (start)
   $(this.holder).find('div[data-schemapath^="root.Files."]').each(function(i,c){
       let prefix_len = "root.Files.".length
       let path = $(c).attr('data-schemapath').substring(prefix_len)
-      pathhref = path.split('/').pop().split('.')[0]
+      let pathhref = path.split('/').pop().split('.')[0]
       $(c).find('button').hide()
       $(c).find('[data-schemapath^="root.Files.' + path + '."]').each(function(i,p)
       {
@@ -249,7 +249,7 @@ theEditor.prototype.json_onload = function (data)
     })
   }
 
-  for (i = 0 ; i < data.length; i += editors_per_page)
+  for (let i = 0 ; i < data.length; i += editors_per_page)
   {
     var navelement = document.createElement('li')
     navelement.id = 'navbarel-' + i
@@ -282,6 +282,6 @@ theEditor.prototype.reset = function ()
 
 theEditor.prototype.open_json = function (content)
 {
-  data = $.parseJSON(content)
+  let data = $.parseJSON(content)
   this.json_onload(data)
 }
