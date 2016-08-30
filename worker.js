@@ -5,7 +5,7 @@ var totalfiles = {}
 var translatedfiles = {}
 var substitutions = {}
 
-pathregex = /\/?([^\/]+)\/(.+)/
+const pathregex = /\/?([^\/]+)\/(.+)/
 
 function sumUp(counter)
 {
@@ -14,7 +14,7 @@ function sumUp(counter)
   {
     return counter
   }
-  for (f in counter)
+  for (let f in counter)
   {
     result += sumUp(counter[f])
   }
@@ -47,7 +47,7 @@ function getByPath(obj, path)
 function setTranslated(msg)
 {
   let path = msg.path.substring("translations/".length)
-  oldvalue = accessByPath(translatedfiles, path)
+  let oldvalue = accessByPath(translatedfiles, path)
   if (oldvalue !== msg.value)
   {
     accessByPath(translatedfiles, path, msg.value)
@@ -95,7 +95,7 @@ function findInFiles(obj, prepath, pattern, callback)
   let sep = "/"
   if (prepath.length == 0)
     sep = ""
-  for (f in obj)
+  for (let f in obj)
   {
     let newprepath = prepath + sep + f
     if (typeof obj[f] == "object")
@@ -118,9 +118,9 @@ function findPath(data, acc)
   })
   promised_substitutions.then(function(subs)
   {
-    for(k in subs)
+    for(let k in subs)
       if(k.indexOf(data.pattern) != -1)
-        for (i in subs[k])
+        for (let i in subs[k])
           if (!results.includes(subs[k][i]))
           {
             results.push(subs[k][i])
@@ -138,7 +138,7 @@ function findCode(data, acc)
 
   let results = acc.getJSON("search/code?q="+req+"")
   results.then(function(answer){
-    for (i in answer.items)
+    for (let i in answer.items)
     {
       postMessage({
         name:"foundresult",
@@ -164,7 +164,7 @@ function refreshProgress(data, account)
   return Promise.all([totprom, trprom])
 }
 
-handlers = {
+const handlers = {
   "getstatus": handleStatus,
   "searchfilename": findPath,
   "searchcontent": findCode,
