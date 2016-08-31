@@ -37,7 +37,7 @@ FileManager.prototype.addFile = function(name, type, on_click)
   complframe.style["margin-bottom"] = 0
   complframe.className = 'progress'
   complindicator.className = 'progress-bar progress-bar-success'
-  complindicator.id = this.holder.id + "-progress-" + name.replace(/[\./]/g, '-')
+  complindicator.id = this.holder.id + "-progress-" + name.replace(/[\s\./]/g, '-')
   complindicator.setAttribute('role', 'progressbar')
   complindicator.setAttribute('aria-valuemin', 0)
   complindicator.setAttribute('aria-valuemax', 100)
