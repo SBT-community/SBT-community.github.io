@@ -190,7 +190,7 @@
         else
         {
           let result = JSON.parse(JSON.stringify(other))
-          for (i in mine.DeniedAlternatives)
+          for (let i in mine.DeniedAlternatives)
             if (! result.DeniedAlternatives.includes(mine.DeniedAlternatives[i]))
               result.DeniedAlternatives.push(mine.DeniedAlternatives[i])
           if (mine.Texts.Rus)
@@ -257,7 +257,7 @@
       let progressrefreshed = theWorker.send("refreshprogress")
       let newjson = editor.get_json()
       let translated = 0
-      for (i in newjson)
+      for (let i in newjson)
       {
         var field = newjson[i]
         if (typeof field['Texts']['Rus'] == "string" &&

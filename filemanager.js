@@ -1,4 +1,4 @@
-
+"use strict";
 const path_prefix = "translations/texts"
 
 function FileManager(holder, navigator, account, on_file)
@@ -62,13 +62,13 @@ FileManager.prototype.addFile = function(name, type, on_click)
 
 FileManager.prototype.track = function(path)
 {
-  var fm = this
+  let fm = this
   let parts = path.slice(path_prefix.length).split('/')
-  var curparts = $(this.navigator).children().toArray()
+  let curparts = $(this.navigator).children().toArray()
   function makeLink(thepath, i)
   {
-    var offset = path_prefix.length
-    for (k=i;k >= 0;k--)
+    let offset = path_prefix.length
+    for (let k=i;k >= 0;k--)
       offset = thepath.indexOf('/', offset) + 1
     if (offset == 0)
       offset = thepath.length
@@ -78,7 +78,7 @@ FileManager.prototype.track = function(path)
       fm.gotoPath(reduced)
     }
   }
-  for (i in parts)
+  for (let i in parts)
   {
     if (parts[i].length == 0)
       parts[i] = 'Корень'
@@ -122,7 +122,7 @@ FileManager.prototype.updateTree = function (file_json, path)
     {
       if (e.size >= 1024000)
       {return}
-      pbid = fm.addFile(e.name, e.type, function()
+      let pbid = fm.addFile(e.name, e.type, function()
         {
           fm.gotoPath(e.path)
         })
