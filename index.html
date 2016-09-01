@@ -157,31 +157,92 @@
       return {uname : uname, upass: upass}
     }
 
-    function manual_resolve(mine, other)
+    function resolveConflict(minefile, otherfile)
     {
-      return new Promise(function(ok, fail){
-        let result = $.extend(true, {}, mine, other)
-        if (other.Texts.Rus && mine.Texts.Rus && mine.Texts.Rus != other.Texts.Rus
-          && mine.Texts.Rus.length != 0 && other.Texts.Rus.length != 0)
+      if (minefile.length !== otherfile.length)
+        return false
+      let resultfile = []
+      let lastpromise = {}
+      function makeResolver(ii)
+      {
+        return function()
         {
-          $('#generalconflict').slideUp()
-          $('#manualsolve').slideUp()
-          $('#particularconflict').slideDown()
-          $('#mineconflict').text(mine.Texts.Rus)
-          $('#otherconflict').text(other.Texts.Rus)
-          $('#prefermine').off('click')
-          $('#prefermine').on('click', function(){
-            result.Texts.Rus = mine.Texts.Rus
-            ok(result)
-          })
-          $('#preferother').off('click')
-          $('#preferother').on('click', function(){
-            result.Texts.Rus = other.Texts.Rus
-            ok(result)
+          return autoSolve(minefile[ii], otherfile[ii]).then(function(r)
+          {
+            resultfile.push(r)
+            return resultfile
           })
         }
+      }
+      for (let i = 0; i < minefile.length; i++)
+        lastpromise = Promise.resolve(lastpromise).then(makeResolver(i))
+      return lastpromise
+    }
+
+    function autoSolve(mine, other)
+    {
+      return new Promise(function(ok, fail)
+      {
+        if (mine.Comment !== other.Comment) fail("секция изменилась")
+        else if (JSON.stringify(mine.Files) !== JSON.stringify(other.Files))
+          fail("произошло обновление базы данных")
+        else if (mine.Texts.Eng !== other.Texts.Eng) fail("английский текст изменился")
         else
+        {
+          let result = JSON.parse(JSON.stringify(other))
+          for (i in mine.DeniedAlternatives)
+            if (! result.DeniedAlternatives.includes(mine.DeniedAlternatives[i]))
+              result.DeniedAlternatives.push(mine.DeniedAlternatives[i])
+          if (mine.Texts.Rus)
+          {
+            if (result.DeniedAlternatives.includes(mine.Texts.Rus))
+              alert("Ваш текст '"+mine.Texts.Rus+"' находится в списке отброшенных вариантов и"+
+                " будет проигнорирован. " +
+                "Удалите его из списка перед сохранением и введите заново,"+
+                " если он больше не считается отброшенным. ")
+            else if ((! result.Texts.Rus) || result.Texts.Rus.length == 0)
+              result.Texts.Rus = mine.Texts.Rus
+            else if (result.Texts.Rus !== mine.Texts.Rus)
+            {
+              popupConflict(mine.Texts.Rus, result.Texts.Rus).then(function(ans)
+                {
+                  if (result.Texts.Rus !== ans)
+                    result.DeniedAlternatives.push(result.Texts.Rus)
+                  else
+                    result.DeniedAlternatives.push(mine.Texts.Rus)
+                  result.Texts.Rus = ans
+                  ok(result)
+                })
+              return
+            }
+          }
           ok(result)
+        }
+      })
+    }
+
+    function popupConflict(mine, other)
+    {
+      return new Promise(function(ok, fail){
+        function selectGen(one)
+        {
+          return function()
+          {
+            $('#conflictbuttons').slideUp()
+            $('#particularconflict').slideUp()
+            $('#waiterconflict').slideDown()
+            ok(one)
+          }
+        }
+        $('#conflictbuttons').slideDown()
+        $('#waiterconflict').slideUp()
+        $('#particularconflict').slideDown()
+        $('#mineconflict').text(mine)
+        $('#otherconflict').text(other)
+        $('#prefermine').off('click')
+        $('#prefermine').on('click', selectGen(mine))
+        $('#preferother').off('click')
+        $('#preferother').on('click', selectGen(other))
       })
     }
 
@@ -250,60 +311,21 @@
       }
       noconflict.catch(function(upd)
       {
-        function makeResolver(pref)
-        {
-          return function()
-          {
-            let result = []
-            function finish(p)
-            {
-              $('#conflictMessage').modal('hide')
-              editor.reset()
-              editor.filedata = upd
-              editor.json_onload(result)
-            }
-            let upd_json = JSON.parse(Base64.decode(upd.content))
-            let obj = editor.get_json()
-            let tbl = {
-              0: upd_json,
-              2: obj
-            }
-            if (obj.length !== upd_json.length)
-            {
-              alert('Файлы не могут быть совмещены! Возможно произошло обновление '+
-                'базы данных. Ваши изменения будут отброшены.')
-              result = upd_json
-            }
-            else if (pref == 0)
-            {
-              function makeManSolver(ii)
-              {
-                return function(p){
-                  return manual_resolve(obj[ii], upd_json[ii])
-                    .then(function(r){result.push(r)})
-                }
-              }
-              let last_pr = {}
-              for (i in obj)
-                last_pr = Promise.resolve(last_pr).then(makeManSolver(i))
-              Promise.resolve(last_pr).then(finish).catch(alert)
-              return
-            }
-            else
-              for (i in obj)
-                result.push($.extend(true, {}, tbl[1-pref][i], tbl[1+pref][i]))
-            finish()
-          }
-        }
-        $('#prefermine').off('click')
-        $('#prefermine').on('click', makeResolver(1))
-        $('#preferother').off('click')
-        $('#preferother').on('click', makeResolver(-1))
-        $('#manualsolve').on('click', makeResolver(0))
-        $('#manualsolve').slideDown()
-        $('#generalconflict').slideDown()
-        $('#particularconflict').slideUp()
         $('#conflictMessage').modal()
+        function finish(result)
+        {
+          $('#conflictMessage').modal('hide')
+          editor.reset()
+          editor.filedata = upd
+          editor.json_onload(result)
+        }
+        let upd_json = JSON.parse(Base64.decode(upd.content))
+        let obj = editor.get_json()
+        resolveConflict(obj, upd_json).then(finish).catch(function(reason){
+          alert('Файлы не могут быть совмещены, поскольку '+ reason +
+            '. Ваши изменения будут отброшены.')
+          finish(upd_json)
+        })
       })
       let translation_updated = Promise.all([progressrefreshed, noconflict])
         .then(function()
@@ -520,22 +542,24 @@
     <h4 class="modal-title">Файл был изменен другим переводчиком!</h4>
   </div>
   <div class='modal-body'>
-    <p id='generalconflict'>Файл, который Вы пытаетесь сохранить, был изменен
-    другим переводчиком. Сейчас произойдет попытка автоматического слияния изменений,
-    но возможны конфликты. Как следует поступить при возникновении конфликта?</p>
+    <div id='waiterconflict'><p>Файл, который Вы пытаетесь сохранить, был изменен
+    другим переводчиком. Сейчас проиcходит попытка автоматического слияния изменений.
+    </p>
+    <div class="progress">
+    <div class="progress-bar bar progress-bar-striped active" role="progressbar"
+      aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style='width: 100%'>
+    </div></div></div>
     <div id="particularconflict" style="display: none" class="row">
     <div class="col-sm-6"><h4>Мой перевод:</h4><p id="mineconflict"></p></div>
     <div class="col-sm-6"><h4>Перевод другого переводчика:</h4>
     <p id="otherconflict"></p></div>
     </div>
   </div>
-  <div class="modal-footer">
+  <div class="modal-footer" id="conflictbuttons" style="display: none">
     <button type="button" class="btn btn-warning" id='prefermine'>
     Записать мой перевод</button>
     <button type="button" class="btn btn-warning"
     id='preferother'>Записать перевод другого переводчика</button>
-    <button type="button" class="btn btn-success"
-    id='manualsolve'>Ручное разрешение конфликта</button>
   </div>
   </div>
   </div>
