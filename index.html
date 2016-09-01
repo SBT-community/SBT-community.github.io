@@ -191,11 +191,11 @@
         {
           let result = JSON.parse(JSON.stringify(other))
           for (let i in mine.DeniedAlternatives)
-            if (! result.DeniedAlternatives.includes(mine.DeniedAlternatives[i]))
+            if ($.inArray(mine.DeniedAlternatives[i], result.DeniedAlternatives) == -1)
               result.DeniedAlternatives.push(mine.DeniedAlternatives[i])
           if (mine.Texts.Rus)
           {
-            if (result.DeniedAlternatives.includes(mine.Texts.Rus))
+            if ($.inArray(mine.Texts.Rus, result.DeniedAlternatives) !== -1)
               alert("Ваш текст '"+mine.Texts.Rus+"' находится в списке отброшенных вариантов и"+
                 " будет проигнорирован. " +
                 "Удалите его из списка перед сохранением и введите заново,"+

@@ -16,7 +16,7 @@ ProWorker.prototype.connect = function (mname, mcallback)
 {
   if (! $.isArray(this.mhandlers[mname]))
     this.mhandlers[mname] = []
-  if (! this.mhandlers[mname].includes(mcallback))
+  if ($.inArray(mcallback, this.mhandlers[mname]) == -1)
     this.mhandlers[mname].push(mcallback)
 }
 
@@ -26,7 +26,7 @@ ProWorker.prototype.disconnect = function (mname, mcallback)
     this.mhandlers[mname] = []
   if (typeof mcallback == "number")
     this.mhandlers[mname].splice(mcallback, 0)
-  else if (! this.mhandlers[mname].includes(mcallback))
+  else if ($.inArray(mcallback, this.mhandlers[mname]) == -1)
     this.mhandlers[mname] = this.mhandlers[mname]
       .filter(function(e){return (e != mcallback)})
 }
