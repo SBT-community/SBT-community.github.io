@@ -248,19 +248,33 @@ theEditor.prototype.json_onload = function (data)
       editor.load_part(start)
     })
   }
-
-  for (let i = 0 ; i < data.length; i += editors_per_page)
+  let has_untranslated = false
+  for (let i = 0 ; i < data.length; i += 1)
   {
-    var navelement = document.createElement('li')
-    navelement.id = 'navbarel-' + i
-    var navbutton = document.createElement('a')
-    navbutton.innerHTML = page
-    navbutton.title = page
-    navbutton.onclick = get_onclick(i)
-    navelement.appendChild(navbutton)
-    this.navbar.append(navelement)
-    this.json = this.json.concat(data.slice(i, i+editors_per_page))
-    page += 1
+    let texts = data[i]["Texts"]
+    let translated = ("Rus" in texts) && (texts["Rus"].length > 0)
+    has_untranslated = has_untranslated || !translated
+    if ((i % editors_per_page == 0 && i > 0) || i == data.length-1)
+    {
+      let pre_i = i - editors_per_page
+      if (pre_i < 0)
+      {pre_i = 0}
+      let navelement = document.createElement('li')
+      navelement.id = 'navbarel-' + pre_i
+      let navbutton = document.createElement('a')
+      navbutton.innerHTML = page
+      navbutton.title = page
+      navbutton.onclick = get_onclick(pre_i)
+      if (has_untranslated)
+      {
+        $(navelement).addClass("untranslated")
+      }
+      navelement.appendChild(navbutton)
+      this.navbar.append(navelement)
+      this.json = this.json.concat(data.slice(pre_i, i+1))
+      page += 1
+      has_untranslated = false
+    }
   }
   $('#navbarel-0').addClass('active')
   this.load_part(0)
