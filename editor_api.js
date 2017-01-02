@@ -249,6 +249,7 @@ theEditor.prototype.json_onload = function (data)
     })
   }
   let has_untranslated = false
+  let last_i = 0
   for (let i = 0 ; i < data.length; i += 1)
   {
     let texts = data[i]["Texts"]
@@ -256,23 +257,21 @@ theEditor.prototype.json_onload = function (data)
     has_untranslated = has_untranslated || !translated
     if ((i % editors_per_page == 0 && i > 0) || i == data.length-1)
     {
-      let pre_i = i - editors_per_page
-      if (pre_i < 0)
-      {pre_i = 0}
       let navelement = document.createElement('li')
-      navelement.id = 'navbarel-' + pre_i
+      navelement.id = 'navbarel-' + last_i
       let navbutton = document.createElement('a')
       navbutton.innerHTML = page
       navbutton.title = page
-      navbutton.onclick = get_onclick(pre_i)
+      navbutton.onclick = get_onclick(last_i)
       if (has_untranslated)
       {
         $(navelement).addClass("untranslated")
       }
       navelement.appendChild(navbutton)
       this.navbar.append(navelement)
-      this.json = this.json.concat(data.slice(pre_i, i+1))
+      this.json = this.json.concat(data.slice(last_i, i+1))
       page += 1
+      last_i = i + 1
       has_untranslated = false
     }
   }
