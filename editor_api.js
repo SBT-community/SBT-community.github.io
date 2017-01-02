@@ -250,12 +250,14 @@ theEditor.prototype.json_onload = function (data)
   }
   let has_untranslated = false
   let last_i = 0
+  let page_end = editors_per_page - 1
+  let data_end = data.length - 1
   for (let i = 0 ; i < data.length; i += 1)
   {
     let texts = data[i]["Texts"]
     let translated = ("Rus" in texts) && (texts["Rus"].length > 0)
     has_untranslated = has_untranslated || !translated
-    if ((i % editors_per_page == 0 && i > 0) || i == data.length-1)
+    if ((i % page_end == 0 && i > 0) || i == data_end)
     {
       let navelement = document.createElement('li')
       navelement.id = 'navbarel-' + last_i
