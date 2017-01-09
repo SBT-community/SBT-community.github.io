@@ -12,6 +12,10 @@ function ProWorker(account)
   }
 }
 
+ProWorker.prototype.refresh_account = function(account){
+  this.account = account
+}
+
 ProWorker.prototype.connect = function (mname, mcallback)
 {
   if (! $.isArray(this.mhandlers[mname]))

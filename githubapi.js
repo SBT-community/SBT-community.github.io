@@ -10,14 +10,21 @@ function setAuthData(xhr, authdata)
   }
 }
 
-function GHAccount(authdata, repo, branch)
+function GHAccount(authdata, owner, repo, branch, holder)
 {
   this.authdata = authdata
-  this.targetrepo = repo
+  this.owner = owner
+  if (holder) {
+    this.targetholder = holder
+  }
+  else {
+    this.targetholder = owner
+  }
+  this.repo = repo
   this.branch = branch
 }
 
-GHAccount.prototype.request = function(url, type, data, onprogress)
+GHAccount.prototype.rawRequest = function(url, type, data, onprogress)
 {
   let acc = this
   let result = new Promise( function(ok, fail)
@@ -42,6 +49,11 @@ GHAccount.prototype.request = function(url, type, data, onprogress)
     setAuthData(ajax, acc.authdata)
     ajax.send(data);
   })
+  return result
+}
+GHAccount.prototype.request = function(url, type, data, onprogress)
+{
+  let result = this.rawRequest(url, type, data, onprogress)
   return result.then(function(answer){return JSON.parse(answer)})
 }
 
@@ -59,7 +71,83 @@ GHAccount.prototype.check_authdata = function (authdata, on_success, on_fail)
 
 GHAccount.prototype.get_repo_suffix = function()
 {
-  return "repos/" + this.targetrepo + '/'
+  return "repos/" + this.targetholder + '/' + this.repo + '/'
+}
+
+GHAccount.prototype.ifNotAMember = function ()
+{
+  let acc = this
+  let url = "orgs/" + acc.owner + "/members/" + acc.authdata.uname
+  return new Promise(function(ok, fail) {
+    acc.rawRequest(url, "GET", {}).catch(ok).then(function(){})
+  })
+}
+
+GHAccount.prototype.ifHasFork = function()
+{
+  let acc = this
+  let url = "repos/" + acc.authdata.uname + '/' + acc.repo
+  return new Promise(function(ok, fail){
+    console.log("in promise")
+    acc.request(url, "GET", {}).then(function(a){
+      console.log("in promise resolve")
+      console.log(a)
+      if (a.parent.full_name == acc.owner + '/' + acc.repo)
+      {ok(a)}
+      else{fail(a)}
+    }).catch(fail)
+  })
+}
+
+GHAccount.prototype.switchToFork = function()
+{
+  this.targetholder = this.authdata.uname
+}
+
+GHAccount.prototype.switchToMain = function()
+{
+  this.targetholder = this.owner
+}
+
+GHAccount.prototype.mergeFrom = function (head)
+{
+  let acc = this
+  let url = acc.get_repo_suffix() + 'merges'
+  let head_json_promise = acc.getHead()
+  let data = {base: acc.branch, head: head}
+  let result = acc.request(url, "POST", JSON.stringify(data))
+  let new_head = result.then(function(commit){
+    return acc.updateHead(commit.sha)
+  })
+  return Promise.resolve(new_head)
+}
+
+GHAccount.prototype.getHead = function(on_progress)
+{
+  return this.getJSON(this.get_repo_suffix() + "git/refs/heads/" +
+    this.branch, {}, on_progress)
+}
+
+GHAccount.prototype.updateHead = function(sha, on_progress)
+{
+  this.request(this.get_repo_suffix() + "git/refs/heads/" +
+    this.branch, "PATCH", JSON.stringify({sha:sha}), on_progress)
+
+}
+
+GHAccount.prototype.compareToOwner = function ()
+{
+  let acc = this
+  let url = acc.get_repo_suffix() + 'compare/' + acc.owner +
+    ":" + acc.branch + "..." + acc.authdata.uname + ":" + acc.branch
+  return acc.request(url, "GET", {})
+}
+
+GHAccount.prototype.fork = function()
+{
+  let acc = this
+  let url = acc.get_repo_suffix() + "forks"
+  return acc.request(url, "POST", [])
 }
 
 GHAccount.prototype.getJSON = function (url, data, onprogress)
@@ -92,8 +180,7 @@ GHAccount.prototype.do_commit = function (msg, filetree, on_progress)
   let authdata = this.authdata
   let acc = this
   let commit_sha = ""
-  let head_json_promise = this.getJSON(this.get_repo_suffix() + "git/refs/heads/" +
-    this.branch, {}, function(p){on_progress(20*p)})
+  let head_json_promise = acc.getHead(function(p){on_progress(20*p)})
   let commit_json_promise = head_json_promise.then(function(ref_json)
     {
       commit_sha = ref_json.object.sha
@@ -133,9 +220,7 @@ GHAccount.prototype.do_commit = function (msg, filetree, on_progress)
     function(commit_json)
     {
       on_progress(80)
-      return acc.request(acc.get_repo_suffix() + "git/refs/heads/" + acc.branch,
-        "PATCH", JSON.stringify({sha:commit_json.sha}),
-        function(p){on_progress(20*p + 80)})
+      return acc.updateHead(commit_json.sha, function(p){on_progress(20*p + 80)})
     })
   return updated_head_promise.then(function(upd_head)
   {

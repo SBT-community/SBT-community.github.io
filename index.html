@@ -145,6 +145,87 @@
           document.cookie = "sbtghsword=" + data.upass +
             ";domain=" + document.domain + ';expires='+ date.toUTCString()
           show_userdata(data, user_data)
+          account.ifNotAMember().then(function (a) {
+            let has_fork = function(a) {
+              console.log("has fork")
+              account.switchToFork()
+              theWorker.refresh_account(account)
+              theWorker.send('refreshprogress').then(function(){
+                theWorker.justSend('getstatus', {id: 'global-progress', path: "translations/"})
+              })
+              $('#pullRequired').slideDown()
+              $('#toGH').click(function() {
+                let w = window.open('https://github.com/' +
+                  account.authdata.uname + '/' + account.repo +
+                  '/tree/' + account.branch)
+                w.focus()
+              })
+              account.compareToOwner().then(function(data){
+                if (data.ahead_by == 0 && data.behind_by == 0)
+                {return}
+                console.log(data)
+                $('#pullHint').slideDown()
+                let text = "Вы работаете с личной копией перевода. На данный момент,"
+                let prefix = ""
+                if (data.ahead_by > 0)
+                {
+                  $('#pullMe').slideDown()
+                  let openPR = function(){
+                    let w = window.open(data.html_url + '?expand=1')
+                    w.focus()
+                  }
+                  $('#pullMe').click(openPR)
+                  text += " количество изменений, которые Вы внесли с момента последнего запроса на слияние: " +
+                    data.ahead_by + ";"
+                  prefix = " а"
+                }
+                if (data.behind_by > 0)
+                {
+                  let sync_cb = function(){
+                    let m = account.mergeFrom(data.base_commit.sha)
+                    m.then(function(a){
+                      alert("Синхронизация успешна. Страница будет обновлена после закрытия этого окна.")
+                      window.location.reload()
+                    }, function(a){
+                      console.log(a)
+                      alert("Невозможно синхронизировать с основным репозиторием перевода. Возможно присутствуют конфликты. Попробуйте разрешить их вручную или обратитесь за помощью к команде SBT.")
+                    })
+                  }
+                  $('#syncMe').slideDown()
+                  $('#syncMe').click(sync_cb)
+                  text += prefix + " количество изменений, внесенных командой SBT с момента последней синхронизации: " + data.behind_by + ";"
+                  if (data.behind_by > 20)
+                  {
+                    text += " помните, чем больше разница между Вашей личной копией и основным переводом, тем больше шансов на возникновение конфликтов при слиянии!"
+                  }
+                }
+                text += " <a href='" + data.html_url +
+                  "' target='_blank'>Подробнее...</a>"
+                $('#pullText').html(text)
+              })
+            }
+            let no_fork = function(a){
+              console.log("User has no fork")
+              let forker = function()
+              {
+                let fork_succeed = function(a) {
+                  alert("Личная копия перевода создана! Вы будете перенаправлены в неё после закрытия этого окна.")
+                  window.location.reload()
+                }
+                let fork_failed = function(a) {
+                  alert("Создание личной копии не удалось! Отправьте вывод консоли разработчика из Вашего браузера на xomachiner@gmail.com")
+                  console.log(a)
+                }
+                account.fork().then(fork_succeed, fork_failed)
+              }
+              $('#forkMe').click(forker)
+              $('#forkMeA').click(forker)
+              $('#forkRequired').slideDown()
+            }
+            console.log("Not a member")
+            account.ifHasFork().then(has_fork, no_fork)
+            console.log(a)
+          })
         },
         function(){$('#auth-failed').slideDown()})
       $('#auth-form').slideUp()
@@ -489,6 +570,46 @@
   </section>
 
   <section>
+  <!-- Forkage and pullage -->
+  <div class="col-sm-12 alert alert-info" id="forkRequired"
+  style="display:none;z-index:1">
+  <p class="col-sm-8">Похоже, Вы не входите в основной состав
+  переводчиков SBT.
+  Если Вы всё равно хотите переводить, <a id="forkMeA">сделайте
+  личную копию</a>
+  перевода, переведите столько, сколько пожелаете, затем
+  выполните запрос на слияние Вашей личной копии с переводом
+  команды SBT. В случае одобрения запроса, у Вас появится
+  возможность вступить в команду переводчиков. Вы также можете
+  продолжить перевод не вступая в команду, а просто переодически
+  отправляя запросы на слияние Вашей версии перевода с переводом
+  команды SBT.</p>
+  <button class="col-sm-4 btn btn-success" id="forkMe">Сделать
+  личную копию!</button>
+  </div>
+  <div class="col-sm-12 alert alert-info" id="pullRequired"
+  style="display:none;z-index:1">
+  <div class="col-sm-8">
+  <p id="pullText">Сейчас Вы работаете со своей личной копией
+  перевода.</p><p id="pullHint"> Сделайте
+  <a id="pullMeA" target="_blank"
+  href='https://help.github.com/articles/about-pull-requests/'>
+  запрос на слияние</a> как только внесёте
+  в нее изменения и будете готовы предложить свой перевод
+  команде SBT. Вы также можете
+  <a id="toGH" href='#'>
+  перейти на github</a> в свою личную копию перевода.</p>
+  </div><div class="col-sm-4">
+  <button id="pullMe" class="btn btn-success" style="display:none;">
+  Запрос на слияние</button>
+  <button id="syncMe" class="btn btn-default"
+  style="display:none">Синхронизировать с переводом от SBT</button>
+  </div>
+  </div>
+  <!-- /Forkage and pullage -->
+  </section>
+
+  <section>
   <div id="file-browser">
   </div>
   <div id="editor-holder" style="display: none">
@@ -601,8 +722,8 @@
     $(document).ready(function()
     {
       var authdata = get_authdata()
-      var account = new GHAccount(authdata, "SBT-community/Starbound_RU",
-        'web-interface')
+      var account = new GHAccount(authdata, "SBT-community",
+        "Starbound_RU", 'web-interface')
       if (authdata == false)
       {
         document.getElementById('auth-form').style.display = ''
@@ -611,11 +732,8 @@
       {
         login(account,authdata)
       }
-
       theWorker = new ProWorker(account)
-      theWorker.connect("getstatus", statusUpdateHandler)
       var progressrefreshed = theWorker.send("refreshprogress")
-
       var editor = new theEditor($("#editor-holder-body").last(),
         $("#editor-navigator").last())
       adjust_floatside()
@@ -681,6 +799,7 @@
             alert("Вы блокируете всплывающие окна на этом сайте, но при " +
              "этом просите открыть файл... Не надо так!")
         })
+      theWorker.connect("getstatus", statusUpdateHandler)
       theWorker.connect("foundresult", function(data)
       {
         resultsList.updateTree([{
@@ -697,7 +816,8 @@
           filemanager.gotoPath(unescape(callargs.open))
         else
           filemanager.gotoHome()
-        theWorker.send("getstatus",{id: 'global-progress', path: 'translations/'})
+        theWorker.justSend("getstatus",
+          {id: 'global-progress', path: 'translations/'})
       })
     })
   </script>

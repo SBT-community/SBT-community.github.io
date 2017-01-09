@@ -65,13 +65,14 @@ function handleStatus(data)
   return {id: data.id, val: value}
 }
 
-function loadSubstitutions(force)
+function loadSubstitutions(acc, force)
 {
   if (Object.keys(substitutions).length !== 0 && ! force)
     return Promise.resolve(substitutions)
   let result = new Promise(function(ok, fail){
     let ajax = new XMLHttpRequest()
-    ajax.open("GET", 'https://rawgit.com/SBT-community/Starbound_RU/web-interface/'+
+    ajax.open("GET", 'https://rawgit.com/' + acc.owner + '/' +
+        acc.repo + '/' + acc.branch + '/'+
         'translations/substitutions.json', true)
     ajax.onerror = fail
     ajax.onload = function () {
@@ -111,7 +112,7 @@ function findInFiles(obj, prepath, pattern, callback)
 
 function findPath(data, acc)
 {
-  let promised_substitutions = loadSubstitutions()
+  let promised_substitutions = loadSubstitutions(acc)
   let results = findInFiles(totalfiles, "", data.pattern, function(p)
   {
     postMessage({name:"foundresult", msg: p})
@@ -133,8 +134,9 @@ function findPath(data, acc)
 
 function findCode(data, acc)
 {
-  let req = encodeURI(data.pattern + " repo:Starbound_RU user:SBT-community "+
-    "path:translations/texts")
+  let req = encodeURI(data.pattern + " repo:" + acc.repo +
+    " user:" + acc.owner +
+    " path:translations/texts")
 
   let results = acc.getJSON("search/code?q="+req+"")
   results.then(function(answer){
@@ -176,8 +178,9 @@ onmessage = function(msg)
 {
   if (! handlers[msg.data.name])
     return
-  let account = new GHAccount(msg.data.account.authdata, msg.data.account.targetrepo,
-    msg.data.account.branch)
+  let account = new GHAccount(msg.data.account.authdata,
+    msg.data.account.owner, msg.data.account.repo,
+    msg.data.account.branch, msg.data.account.targetholder)
   let result = handlers[msg.data.name](msg.data.msg, account)
   Promise.resolve(result).then(function(r)
   {
