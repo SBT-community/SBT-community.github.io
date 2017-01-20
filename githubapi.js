@@ -42,7 +42,7 @@ GHAccount.prototype.rawRequest = function(url, type, data, onprogress)
       }
     ajax.onload = function () {
       if (ajax.status >= 400)
-        fail(ajax, ajax.status, ajax.responseText)
+        fail(ajax, ajax.status, ajax.response)
       else
         ok(ajax.response);
     };

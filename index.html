@@ -219,7 +219,8 @@
                   window.location.reload()
                 }
                 let fork_failed = function(a) {
-                  alert("Создание личной копии не удалось! Отправьте вывод консоли разработчика из Вашего браузера на xomachiner@gmail.com")
+                  alert("Создание личной копии не удалось! Отправьте вывод консоли разработчика из Вашего браузера на xomachiner@gmail.com. Дополнительная информация: " +
+                    a.response + ", " + a.responseText)
                   console.log(a)
                 }
                 account.fork().then(fork_succeed, fork_failed)
