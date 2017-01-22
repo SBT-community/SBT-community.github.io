@@ -11,6 +11,7 @@
   <script type="text/javascript" src="https://rawgit.com/jdorn/json-editor/master/dist/jsoneditor.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <script src="https://rawgit.com/dankogai/js-base64/master/base64.min.js"></script>
+  <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
   <script src="githubapi.js"></script>
   <script src="editor_api.js"></script>
   <script src="filemanager.js"></script>
@@ -47,6 +48,11 @@
     background-image: linear-gradient(#d9edf7, transparent);
   }
   </style>
+  <script>
+  ((window.gitter = {}).chat = {}).options = {
+    room: 'SBT-community/translations'
+  };
+</script>
   <script type="text/javascript">
     "use strict";
     JSONEditor.defaults.options.theme = 'bootstrap3';
