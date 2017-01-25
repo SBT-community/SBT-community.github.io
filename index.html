@@ -144,12 +144,48 @@
       return matches ? decodeURIComponent(matches[1]) : "";
     }
 
+    function subscribe_notifications(account) {
+      let thepopover = {
+        content: "У вас есть непрочитанные уведомления на github. <a target='_blank' id='readntf' href='https://github.com/notifications'>Прочитать...</a>",
+        html: true,
+        toggle: "popover",
+        placement: "bottom"}
+      let markasread = function() {
+        account.request('notifications', 'PUT', "[]").then(on_notification)
+      }
+      let markafterdelay = function () {
+        setTimeout(markasread, 10000)
+      }
+      let bounded = false
+      let on_notification = function(a) {
+        if (a.length > 0) {
+          $('#fm-navbar').popover("show")
+          if (!bounded){
+            $('#readntf').click(markafterdelay)
+            bounded = true
+          }
+        }
+        else {
+          $('#fm-navbar').popover("hide")
+        }
+      }
+      let notifier = function() {
+        account.request('notifications', 'GET', "").then(on_notification)
+      }
+      $(document).ready(function(){
+        $('#fm-navbar').popover(thepopover)
+        setInterval(notifier, 60000)
+        notifier()
+      })
+    }
+
     function login(account, data)
     {
       unlogin()
       account.check_authdata(data, function(user_data)
         {
           data.email = user_data.email
+          subscribe_notifications(account)
           var date = new Date()
           date.setMonth(date.getMonth() + 1)
           document.cookie = "sbtghuser=" + data.uname +
