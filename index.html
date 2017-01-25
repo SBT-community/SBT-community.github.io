@@ -150,13 +150,13 @@
         html: true,
         toggle: "popover",
         placement: "bottom"}
+      let bounded = false
       let markasread = function() {
-        account.request('notifications', 'PUT', "[]").then(on_notification)
+        account.request('notifications', 'PUT', JSON.stringify({})).then(function(){$('#fm-navbar').popover('hide')})
       }
       let markafterdelay = function () {
         setTimeout(markasread, 10000)
       }
-      let bounded = false
       let on_notification = function(a) {
         if (a.length > 0) {
           $('#fm-navbar').popover("show")
