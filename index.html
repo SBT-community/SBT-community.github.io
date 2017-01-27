@@ -148,14 +148,15 @@
       let thepopover = {
         content: "У вас есть непрочитанные уведомления на github. <a target='_blank' id='readntf' href='https://github.com/notifications'>Прочитать...</a>",
         html: true,
-        toggle: "popover",
+        trigger: "none",
         placement: "bottom"}
       let bounded = false
       let markasread = function() {
-        account.request('notifications', 'PUT', JSON.stringify({})).then(function(){$('#fm-navbar').popover('hide')})
+        account.request('notifications', 'PUT', JSON.stringify({}))
       }
       let markafterdelay = function () {
         setTimeout(markasread, 10000)
+        $('#fm-navbar').popover('hide')
       }
       let on_notification = function(a) {
         if (a.length > 0) {
