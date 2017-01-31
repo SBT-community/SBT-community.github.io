@@ -584,6 +584,10 @@
     </input>
     <button class="btn btn-success"
     id="do-login" type="submit">Вход</button>
+    <button class="btn btn-default" target="_blank"
+    data-toggle="popover" data-placement="bottom"
+    href="https://github.com/join" data-trigger="hover"
+    data-content="Для работы с переводом Вам понадобится учётная запись на github.com. Эта кнопка перенесет Вас на страницу регистрации новой учётной записи, логин и пароль которой можно использовать на этом сайте.">Регистрация</button>
   </form>
   </nav>
   </aside>
@@ -771,6 +775,7 @@
       {$('#sidebar').width($('#sidebar-placeholder').width())}
     $(document).ready(function()
     {
+      $('[data-toggle="popover"]').popover()
       var authdata = get_authdata()
       var account = new GHAccount(authdata, "SBT-community",
         "Starbound_RU", 'web-interface')
