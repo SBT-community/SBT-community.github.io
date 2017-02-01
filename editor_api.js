@@ -249,15 +249,14 @@ theEditor.prototype.json_onload = function (data)
     })
   }
   let has_untranslated = false
+  let ii = 0
   let last_i = 0
-  let page_end = editors_per_page - 1
-  let data_end = data.length - 1
   for (let i = 0 ; i < data.length; i += 1)
   {
     let texts = data[i]["Texts"]
     let translated = ("Rus" in texts) && (texts["Rus"].length > 0)
     has_untranslated = has_untranslated || !translated
-    if ((i % page_end == 0 && i > 0) || i == data_end)
+    if (ii == editors_per_page - 1 | i == data.length - 1)
     {
       let navelement = document.createElement('li')
       navelement.id = 'navbarel-' + last_i
@@ -271,12 +270,16 @@ theEditor.prototype.json_onload = function (data)
       }
       navelement.appendChild(navbutton)
       this.navbar.append(navelement)
-      this.json = this.json.concat(data.slice(last_i, i+1))
+      //this.json = this.json.concat(data.slice(last_i, i + 1))
       page += 1
-      last_i = i + 1
+      last_i = i+1
+      ii = -1 //not 0 due to increment after
       has_untranslated = false
     }
+    ii += 1
   }
+  this.json = data
+  //console.log(data.length + " == " + this.json.length )
   $('#navbarel-0').addClass('active')
   this.load_part(0)
 }
