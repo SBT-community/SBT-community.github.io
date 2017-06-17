@@ -62,7 +62,11 @@ GHAccount.prototype.check_authdata = function (authdata, on_success, on_fail)
   var acc = this
   acc.authdata = authdata
   let authed = acc.request("user", "GET", {})
-  authed.then(on_success).catch(function(a)
+  authed.then(function(a)
+  {
+    acc.authdata.uname = a.login;
+    on_success(a)
+  }).catch(function(a)
   {
     acc.authdata = {}
     on_fail(a)
