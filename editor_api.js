@@ -122,6 +122,52 @@ function theEditor(holder, navigator)
   this.touched = false
 }
 
+let onImage = function(imgUrl){
+  let image = document.createElement('IMG')
+  image.src = imgUrl
+  image.className = 'img-rounded img-responsive'
+  return image
+}
+
+function referenceLookup(subtree, path)
+{
+  let pageref = path.split('/').pop().split('.')[0]
+  let siteUrl = "http://starbounder.org"
+  let apiUrl = siteUrl + "/mediawiki/api.php?"
+  let to_replace = $(subtree).find('h3')
+  let sysAnch = document.createElement("A")
+  let container = document.createElement("DIV")
+  sysAnch.href = siteUrl + "/Data:" + pageref
+  sysAnch.innerHTML = path
+  container.appendChild(sysAnch)
+  to_replace.replaceWith(container)
+  let serviceResponse = function(response){
+    let matches = response.parse.text["*"]
+      .match(/<td>Wiki Page\s*<\/td>\s*<td[^>]*>\s*<a\s+href="\/([^"]+)"/)
+    if (matches && matches.length > 1){
+      let url = matches[1]
+      let wikiResponse = function(response){
+        let imgUrl = response.parse.text["*"]
+          .match(/<div[^>]+>\s*<a[^>]+>\s*<img[^>]+src="(\/mediawiki\/images\/[0-9a-f]+\/[0-9a-f]+\/[a-zA-Z_.]+\.png)/i)
+        if (imgUrl && imgUrl.length > 1)
+        {
+          let anchor = document.createElement("A")
+          anchor.href = siteUrl + "/" + url
+          anchor.appendChild(onImage(siteUrl + imgUrl[1]))
+          container.appendChild(anchor)
+        }
+      }
+      $.ajax(apiUrl + "action=parse&format=json&page=" + url,
+             {contentType: "application/json",
+              dataType:"jsonp"}).done(wikiResponse)
+    }
+  }
+  let starbounderUrl = apiUrl +
+    "action=parse&format=json&prop=text&page=Data:" + pageref
+  $.ajax(starbounderUrl,{
+    dataType: "jsonp",
+    contentType:"application/json"}).done(serviceResponse)
+}
 
 theEditor.prototype.load_part = function (start)
 {
@@ -205,7 +251,6 @@ theEditor.prototype.load_part = function (start)
   $(this.holder).find('div[data-schemapath^="root.Files."]').each(function(i,c){
       let prefix_len = "root.Files.".length
       let path = $(c).attr('data-schemapath').substring(prefix_len)
-      let pathhref = path.split('/').pop().split('.')[0]
       $(c).find('button').hide()
       $(c).find('[data-schemapath^="root.Files.' + path + '."]').each(function(i,p)
       {
@@ -213,8 +258,7 @@ theEditor.prototype.load_part = function (start)
         $(p).parent().append('<p>' + internal_path + '</p>')
         $(p).hide()
       })
-      $(c).find('h3').replaceWith("<a href='http://starbounder.org/Data:" +
-        pathhref + "' target='_blank'>" + path + "</a>")
+      referenceLookup(c, path)
     })
   $('table.table-bordered').css('width', '')
 }
