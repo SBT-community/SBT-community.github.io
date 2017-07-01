@@ -202,19 +202,27 @@ function referenceLookup(subtree, path)
           break
         }
       }
+      if(name == "") return
     }
     imageLink.href = siteUrl + "/" + name
-    let wpurl = apiUrl + "action=query&format=json&aifrom=" + name +
-      "&list=allimages&aiprefix=" + name
-    $.ajax(wpurl, {contentType: "application/json",
-                   dataType:"jsonp"}).done(imagesResponse)
+    let wpurl = apiUrl + $.param({
+      action:"query",
+      format:"json",
+      aifrom:name,
+      list:"allimages",
+      aiprefix:name,
+      origin: location.protocol + '//' + location.host})
+    $.ajax(wpurl, {dataType:"json"}).done(imagesResponse)
 
   }
-  let starbounderUrl = apiUrl +
-    "action=parse&format=json&prop=links&page=Data:" + pageref
-  $.ajax(starbounderUrl,{
-    dataType: "jsonp",
-    contentType:"application/json"}).done(serviceResponse)
+  let starbounderUrl = apiUrl + $.param({
+      action: "parse",
+      format: "json",
+      prop: "links",
+      page: "Data:" + pageref,
+      origin: location.protocol + '//' + location.host})
+  $.ajax(starbounderUrl,{dataType: "json"})
+    .done(serviceResponse)
 }
 
 theEditor.prototype.load_part = function (start)
