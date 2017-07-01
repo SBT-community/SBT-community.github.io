@@ -192,13 +192,13 @@ function referenceLookup(subtree, path)
   let serviceResponse = function(response){
     let name = ""
     if(response.error){
-      name = encodeURIComponent(pageref)
+      name = pageref.replace(/\s/, "_")
     }
     else{
       for (let i in response.parse.links){
         let link = response.parse.links[i]
         if(link.ns == 0){
-          name = encodeURIComponent(link["*"])
+          name = encodeURIComponent(link["*"].replace(/\s/, '_'))
           break
         }
       }
@@ -211,8 +211,8 @@ function referenceLookup(subtree, path)
       aifrom:name,
       list:"allimages",
       aiprefix:name,
-      origin: location.protocol + '//' + location.host})
-    $.ajax(wpurl, {dataType:"json"}).done(imagesResponse)
+    })
+    $.ajax(wpurl, {dataType:"jsonp"}).done(imagesResponse)
 
   }
   let starbounderUrl = apiUrl + $.param({
@@ -220,8 +220,8 @@ function referenceLookup(subtree, path)
       format: "json",
       prop: "links",
       page: "Data:" + pageref,
-      origin: location.protocol + '//' + location.host})
-  $.ajax(starbounderUrl,{dataType: "json"})
+  })
+  $.ajax(starbounderUrl,{dataType: "jsonp"})
     .done(serviceResponse)
 }
 
@@ -370,7 +370,6 @@ theEditor.prototype.json_onload = function (data)
       }
       navelement.appendChild(navbutton)
       this.navbar.append(navelement)
-      //this.json = this.json.concat(data.slice(last_i, i + 1))
       page += 1
       last_i = i+1
       ii = -1 //not 0 due to increment after
@@ -379,7 +378,6 @@ theEditor.prototype.json_onload = function (data)
     ii += 1
   }
   this.json = data
-  //console.log(data.length + " == " + this.json.length )
   $('#navbarel-0').addClass('active')
   this.load_part(0)
 }
