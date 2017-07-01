@@ -192,13 +192,13 @@ function referenceLookup(subtree, path)
   let serviceResponse = function(response){
     let name = ""
     if(response.error){
-      name = pageref.replace(/\s/, "_")
+      name = pageref.replace(/\s/g, "_")
     }
     else{
       for (let i in response.parse.links){
         let link = response.parse.links[i]
         if(link.ns == 0){
-          name = encodeURIComponent(link["*"].replace(/\s/, '_'))
+          name = encodeURIComponent(link["*"].replace(/\s/g, '_'))
           break
         }
       }
