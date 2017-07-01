@@ -207,21 +207,21 @@ function referenceLookup(subtree, path)
     imageLink.href = siteUrl + "/" + name
     let wpurl = apiUrl + $.param({
       action:"query",
-      format:"xml",
+      format:"json",
       aifrom:name,
       list:"allimages",
       aiprefix:name,
       origin: location.protocol + '//' + location.host})
-    $.ajax(wpurl, {dataType:"xml"}).done(imagesResponse)
+    $.ajax(wpurl, {dataType:"json"}).done(imagesResponse)
 
   }
   let starbounderUrl = apiUrl + $.param({
       action: "parse",
-      format: "xml",
+      format: "json",
       prop: "links",
       page: "Data:" + pageref,
       origin: location.protocol + '//' + location.host})
-  $.ajax(starbounderUrl,{dataType: "xml"})
+  $.ajax(starbounderUrl,{dataType: "json"})
     .done(serviceResponse)
 }
 
