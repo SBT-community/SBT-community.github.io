@@ -129,6 +129,27 @@ let onImage = function(imgUrl){
   return image
 }
 
+function makeCarousel(name)
+{
+  let carousel = document.createElement('div')
+  carousel.id = "Carousel-" + name
+  carousel.className = "carousel slide"
+  $(carousel).attr("data-ride", "carousel")
+  let left = document.createElement('a')
+  let right = document.createElement('a')
+  $(left).add(right).addClass("carousel-control")
+  $(left).addClass("left")
+  $(right).addClass("right")
+  left.href = '#Carousel-' + name
+  right.href = '#Carousel-' + name
+  $(left).attr("data-slide", "prev")
+  $(right).attr("data-slide", "next")
+  $(left).append("<span class='glyphicon glyphicon-chevron-left'></span>")
+  $(right).append("<span class='glyphicon glyphicon-chevron-right'></span>")
+  $(carousel).append(left, right)
+  return carousel
+}
+
 function referenceLookup(subtree, path)
 {
   let pageref = path.split('/').pop().split('.')[0]
@@ -138,32 +159,59 @@ function referenceLookup(subtree, path)
   let sysAnch = document.createElement("A")
   let container = document.createElement("DIV")
   sysAnch.href = siteUrl + "/Data:" + pageref
+  sysAnch.target = "_blank"
   sysAnch.innerHTML = path
   container.appendChild(sysAnch)
+  let carousel = makeCarousel(path.replace(/[\/\.]/g, '_'))
+  let imageLink = document.createElement('A')
+  imageLink.className = 'carousel-inner'
+  imageLink.target = "_blank"
+  $(carousel).prepend(imageLink)
   to_replace.replaceWith(container)
+  let imagesResponse = function(response){
+    let icon_needed = true
+    let pngneeded = true
+    if(response.query.allimages.length > 0)
+      container.appendChild(carousel)
+    for(let i in response.query.allimages){
+      let img = response.query.allimages[i]
+      if(icon_needed && img.name.match(/Icon\.png/)){
+        $(container).parent().parent().parent().parent().parent()
+          .siblings('h3').append("<img class=btn-group src='" + img.url + "'>")
+        icon_needed = false
+      }
+      else if(pngneeded || img.name.match(/Sample/) ||
+              ! img.name.match(/png$/)){
+        $(imageLink).append("<img class='item center-block img-responsive" +
+          " img-rounded' src='"+ img.url + "'>")
+        pngneeded = false
+      }
+    }
+    $(imageLink).children().first().addClass("active")
+  }
   let serviceResponse = function(response){
-    let matches = response.parse.text["*"]
-      .match(/<td>Wiki Page\s*<\/td>\s*<td[^>]*>\s*<a\s+href="\/([^"]+)"/)
-    if (matches && matches.length > 1){
-      let url = matches[1]
-      let wikiResponse = function(response){
-        let imgUrl = response.parse.text["*"]
-          .match(/<div[^>]+>\s*<a[^>]+>\s*<img[^>]+src="(\/mediawiki\/images\/[0-9a-f]+\/[0-9a-f]+\/[a-zA-Z_.]+\.png)/i)
-        if (imgUrl && imgUrl.length > 1)
-        {
-          let anchor = document.createElement("A")
-          anchor.href = siteUrl + "/" + url
-          anchor.appendChild(onImage(siteUrl + imgUrl[1]))
-          container.appendChild(anchor)
+    let name = ""
+    if(response.error){
+      name = encodeURIComponent(pageref)
+    }
+    else{
+      for (let i in response.parse.links){
+        let link = response.parse.links[i]
+        if(link.ns == 0){
+          name = encodeURIComponent(link["*"])
+          break
         }
       }
-      $.ajax(apiUrl + "action=parse&format=json&page=" + url,
-             {contentType: "application/json",
-              dataType:"jsonp"}).done(wikiResponse)
     }
+    imageLink.href = siteUrl + "/" + name
+    let wpurl = apiUrl + "action=query&format=json&aifrom=" + name +
+      "&list=allimages&aiprefix=" + name
+    $.ajax(wpurl, {contentType: "application/json",
+                   dataType:"jsonp"}).done(imagesResponse)
+
   }
   let starbounderUrl = apiUrl +
-    "action=parse&format=json&prop=text&page=Data:" + pageref
+    "action=parse&format=json&prop=links&page=Data:" + pageref
   $.ajax(starbounderUrl,{
     dataType: "jsonp",
     contentType:"application/json"}).done(serviceResponse)
