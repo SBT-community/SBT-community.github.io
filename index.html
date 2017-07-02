@@ -66,14 +66,16 @@
 
     function backtofm(editor)
     {
-      if (typeof editor !== 'undefined' && editor.touched)
+      if (typeof editor !== 'undefined')
       {
-        let newdata = JSON.stringify(editor.get_json(), null, 2)
-        let olddata = Base64.decode(editor.filedata.content)
-        if (newdata != olddata)
-        {
-          $('#unsavedMessage').modal()
-          return
+        if (editor.touched){
+          let newdata = JSON.stringify(editor.get_json(), null, 2)
+          let olddata = Base64.decode(editor.filedata.content)
+          if (newdata != olddata)
+          {
+            $('#unsavedMessage').modal()
+            return
+          }
         }
         editor.reset()
       }
