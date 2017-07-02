@@ -5,7 +5,6 @@ function FileManager(holder, navigator, account, on_file)
 {
   this.holder = holder
   this.navigator = navigator
-  this.table = {}
   this.table = document.createElement('table')
   this.table.className = "table table-responsive table-hover"
   this.table.id = holder.id + "-fmtree"
@@ -13,14 +12,26 @@ function FileManager(holder, navigator, account, on_file)
   this.holder.appendChild(this.table)
   this.account = account
   this.on_file = on_file
+  let fm = this
+  if(navigator)
+    $(window).bind("popstate", function (wevent) {
+      let event = wevent.originalEvent
+      if(event.state.path && event.state.json) {
+        $(fm.table).find('tbody').html('')
+        fm.updateTree(event.state.json, event.state.path)
+        if(event.state.file_json)
+          fm.on_file(event.state.file_json)
+        else backtofm()
+      }
+    })
 }
 
 
 FileManager.prototype.addFile = function(name, type, on_click)
 {
-  var row = this.table.insertRow()
-  var img = row.insertCell()
-  var glyph = {
+  let row = this.table.insertRow()
+  let img = row.insertCell()
+  let glyph = {
     "dir": "folder-open",
     "file": "list-alt",
     "up": "level-up"
@@ -28,12 +39,12 @@ FileManager.prototype.addFile = function(name, type, on_click)
   img.innerHTML = "<span class='glyphicon glyphicon-" + glyph[type] + "'></span>"
   img.className = "img-responsive"
   img.style.width = 16
-  var link = row.insertCell()
+  let link = row.insertCell()
   link.className = "container"
-  var completion = row.insertCell()
+  let completion = row.insertCell()
 
-  var complindicator = document.createElement('div')
-  var complframe = document.createElement('div')
+  let complindicator = document.createElement('div')
+  let complframe = document.createElement('div')
   complframe.style["margin-bottom"] = 0
   complframe.className = 'progress'
   complindicator.className = 'progress-bar progress-bar-success'
@@ -48,7 +59,7 @@ FileManager.prototype.addFile = function(name, type, on_click)
 
   completion.className = 'container'
 
-  var thelink = document.createElement('a')
+  let thelink = document.createElement('a')
   thelink.className = ""
   thelink.title = name
   thelink.innerHTML = name
@@ -99,15 +110,15 @@ FileManager.prototype.track = function(path)
 
 FileManager.prototype.updateTree = function (file_json, path)
 {
-  var fm = this
+  let fm = this
   if (path.length > 0)
   {
     this.track(path)
   }
-  var offset = path.lastIndexOf("/")
+  let offset = path.lastIndexOf("/")
   if (offset >= path_prefix.length - 1)
   {
-    var prev_path = path.slice(0,offset)
+    let prev_path = path.slice(0,offset)
     offset = path.lastIndexOf("?")
     if (offset != -1)
     {
@@ -132,22 +143,39 @@ FileManager.prototype.updateTree = function (file_json, path)
 
 FileManager.prototype.gotoPath = function (path)
 {
+  this.gotoAdvancedPath(path, "track")
+}
+FileManager.prototype.gotoAdvancedPath = function(path, tracking)
+{
   let fm = this
   path = path.replace(/\/$/, "")
+  let pusher = history.pushState
+  if(tracking == "replace") pusher = history.replaceState
+  else if (tracking == "none") pusher = function (){}
   if (!this.account)
   {
     this.on_file(path)
     return
   }
-  this.account.getJSON(this.account.get_repo_suffix() + "contents/" + path + '?ref=' +
-    this.account.branch).then(
-    function(json){
+  this.account.getJSON(this.account.get_repo_suffix() + "contents/"
+                              + path + '?ref=' + this.account.branch)
+    .then(function(json){
       if (!($.isArray(json)))
       {
-        fm.gotoPath(path.replace(/\/[^\/]+$/, ""))
+        fm.gotoAdvancedPath(path.replace(/\/[^\/]+$/, ""), "none")
         fm.on_file(json)
+        pusher.call(history, {
+          path: path,
+          json: history.state.json,
+          file_json: json,
+          }, "Интерфейс переводчика", "?open=" + path)
         return
       }
+      pusher.call(history, {
+        path: path,
+        json: json,
+        file_json: false,
+        }, "Интерфейс переводчика", "?open=" + path)
       $(fm.table).find('tbody').html('')
       fm.updateTree(json, path)
     })
@@ -155,7 +183,6 @@ FileManager.prototype.gotoPath = function (path)
 
 FileManager.prototype.gotoHome = function ()
 {
-  this.gotoPath(path_prefix)
+  this.gotoAdvancedPath(path_prefix, "replace")
 }
-
 

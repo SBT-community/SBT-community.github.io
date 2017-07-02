@@ -66,20 +66,22 @@
 
     function backtofm(editor)
     {
-      var newdata = JSON.stringify(editor.get_json(), null, 2)
-      var olddata = Base64.decode(editor.filedata.content)
-      if (editor.touched)
+      if (typeof editor !== 'undefined' && editor.touched)
+      {
+        let newdata = JSON.stringify(editor.get_json(), null, 2)
+        let olddata = Base64.decode(editor.filedata.content)
         if (newdata != olddata)
         {
           $('#unsavedMessage').modal()
           return
         }
+        editor.reset()
+      }
       $("#editor-holder").slideUp()
       $("#editor-navigation").slideUp()
       $("#editor-navbar").slideUp()
       $("#fm-navbar").slideDown()
       $("#file-browser").slideDown()
-      editor.reset()
     }
 
     function get_call_arguments()
@@ -868,7 +870,7 @@
       progressrefreshed.then(function (){
         var callargs = get_call_arguments()
         if (callargs.open)
-          filemanager.gotoPath(unescape(callargs.open))
+          filemanager.gotoAdvancedPath(unescape(callargs.open), "replace")
         else
           filemanager.gotoHome()
         theWorker.justSend("getstatus",
