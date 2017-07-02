@@ -132,7 +132,8 @@ FileManager.prototype.updateTree = function (file_json, path)
 
 FileManager.prototype.gotoPath = function (path)
 {
-  var fm = this
+  let fm = this
+  path = path.replace(/\/$/, "")
   if (!this.account)
   {
     this.on_file(path)
@@ -143,6 +144,7 @@ FileManager.prototype.gotoPath = function (path)
     function(json){
       if (!($.isArray(json)))
       {
+        fm.gotoPath(path.replace(/\/[^\/]+$/, ""))
         fm.on_file(json)
         return
       }
