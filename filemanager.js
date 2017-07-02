@@ -21,7 +21,6 @@ function FileManager(holder, navigator, account, on_file)
         fm.updateTree(event.state.json, event.state.path)
         if(event.state.file_json)
           fm.on_file(event.state.file_json)
-        else backtofm()
       }
     })
 }

@@ -806,11 +806,16 @@
         editor.open_json(Base64.decode(json.content))
       }
 
-      var filemanager = new FileManager($("#file-browser")[0],
+      let filemanager = new FileManager($("#file-browser")[0],
         $("#fm-history")[0], account, on_file)
-
+      let fmreturn = function(){backtofm(editor)}
+      $(window).bind('popstate', function(e){
+        let ev = e.originalEvent.state
+        if(ev && ev.json && ! ev.file_json)
+          fmreturn()
+      })
       $('#perform-commit').on('click', function(){commit(account, editor)})
-      $('#backtofm').on('click', function(){backtofm(editor);})
+      $('#backtofm').on('click', fmreturn)
       $('#force-backtofm').on('click', function()
       {
         editor.touched = false;
