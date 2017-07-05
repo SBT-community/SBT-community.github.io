@@ -856,7 +856,7 @@
       let listHolder = $('#searchresult-holder')
       let resultsList = new FileManager(listHolder[0], null, null,
         function(p){
-          let newwin = window.open(document.location + '?open='+escape(p))
+          let newwin = window.open(document.location.host + '?open='+escape(p))
           if (newwin)
             newwin.focus()
           else
