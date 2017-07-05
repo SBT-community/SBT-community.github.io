@@ -86,11 +86,10 @@ const schema = {
   }
 }
 
-function check_codex_length(text, after_check)
+function check_label_length(text, after_check, maxwidth, maxheight)
 {
-  let maxwidth = 40
   let width = maxwidth
-  let height = 17 - 1 // first string taken anyway
+  let height = maxheight - 1 // first string taken anyway
   let splited = text.split(/([^\t\s\n\r]+|\r?\n)/)
   for (let s in splited)
   {
@@ -225,6 +224,38 @@ function referenceLookup(subtree, path)
     .done(serviceResponse)
 }
 
+theEditor.prototype.generate_label_checker = function(ii, maxwidth, maxheight)
+{
+  let ed = this
+  function after_check(diff)
+  {
+    $(ed.subeditors[ii].getEditor('root.Texts.Rus').container)
+      .find('#overflow-warning').remove()
+    $(ed.subeditors[ii].root_container).find('#overflow-head').remove()
+    if (diff > 0)
+    {
+      $(ed.subeditors[ii].root_container).addClass('alert-danger')
+      $(ed.subeditors[ii].getEditor('root.Texts.Rus').container)
+        .append('<p id="overflow-warning">Текст длиннее окна!' +
+        ' Лишних строк: '+ diff +'!</p>')
+      $(ed.subeditors[ii].root_container).children('h3')
+      .append('<span id="overflow-head">Слишком длинный текст!</span>')
+    }
+    else
+    {
+      $(ed.subeditors[ii].root_container).removeClass('alert-danger')
+    }
+  }
+  return function(first)
+  {
+    let curval = ed.subeditors[ii].getEditor('root.Texts.Rus').getValue()
+    check_label_length(curval, after_check, maxwidth, maxheight)
+    ed.touched = true
+    if (first){ ed.touched = false}
+  }
+}
+
+
 theEditor.prototype.load_part = function (start)
 {
   this.subeditors = {}
@@ -239,11 +270,11 @@ theEditor.prototype.load_part = function (start)
     {
       this.json[i]['Texts']['Rus'] = ""
     }
-    if (titletext.length > 16)
+    if (titletext.length > 20)
     {
-      titletext = titletext.slice(0, 16) + "..."
+      titletext = titletext.slice(0, 20) + "..."
     }
-    if (this.json.length-start < 2)
+    if (this.json.length-start < 3)
     {
       fixed_schema.schema.options.collapsed = false
     }
@@ -258,36 +289,7 @@ theEditor.prototype.load_part = function (start)
         .find('div[data-schemapath="root.DeniedAlternatives"]')
         .addClass('alert-success')
     }
-    function generate_codex_checker(ii)
-    {
-      function after_check(diff)
-      {
-        $(ed.subeditors[ii].getEditor('root.Texts.Rus').container)
-          .find('#overflow-warning').remove()
-        $(ed.subeditors[ii].root_container).find('#overflow-head').remove()
-        if (diff > 0)
-        {
-          $(ed.subeditors[ii].root_container).addClass('alert-danger')
-          $(ed.subeditors[ii].getEditor('root.Texts.Rus').container)
-            .append('<p id="overflow-warning">Текст длиннее окна кодекса!' +
-            ' Лишних строк: '+ diff +'!</p>')
-          $(ed.subeditors[ii].root_container).children('h3')
-          .append('<span id="overflow-head">Слишком длинный текст!</span>')
-        }
-        else
-        {
-          $(ed.subeditors[ii].root_container).removeClass('alert-danger')
-        }
-      }
-      return function(first)
-      {
-        let curval = ed.subeditors[ii].getEditor('root.Texts.Rus').getValue()
-        check_codex_length(curval, after_check)
-        ed.touched = true
-        if (first){ ed.touched = false}
-      }
-    }
-    let ccheck = generate_codex_checker(i)
+    let ccheck = ed.generate_label_checker(i, 40, 17)
     ccheck(true)
     subeditor.watch('root.Texts.Rus', ccheck)
     if (this.json[i]['Texts']['Rus'] === "")
