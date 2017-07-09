@@ -147,29 +147,27 @@ FileManager.prototype.gotoPath = function (path)
 FileManager.prototype.gotoAdvancedPath = function(path, tracking)
 {
   let fm = this
-  path = path.replace(/\/$/, "")
-  let pusher = history.pushState
-  if(tracking == "replace") pusher = history.replaceState
-  else if (tracking == "none") pusher = function (){}
-  if (!this.account)
-  {
-    this.on_file(path)
-    return
-  }
-  this.account.getJSON(this.account.get_repo_suffix() + "contents/"
-                              + path + '?ref=' + this.account.branch)
-    .then(function(json){
-      if (!($.isArray(json)))
-      {
-        fm.gotoAdvancedPath(path.replace(/\/[^\/]+$/, ""), "none")
+  let callback
+  if(path.match(/^.*\.[a-zA-Z]+$/)) callback = function(json){
+    fm.gotoAdvancedPath(path.replace(/\/[^\/]+$/, ""), tracking)
+      .then(function(){
+        console.log("onfile called", history)
         fm.on_file(json)
-        pusher.call(history, {
-          path: path,
-          json: history.state.json,
-          file_json: json,
-          }, "Интерфейс переводчика", "?open=" + path)
-        return
-      }
+        if(tracking != "none")
+          history.replaceState({
+            path: path,
+            json: history.state.json,
+            file_json: json,
+            }, "Интерфейс переводчика", "?open=" + path)
+      })
+  }
+  else{
+    path = path.replace(/\/$/, "")
+    let pusher = history.pushState
+    if(tracking == "replace") pusher = history.replaceState
+    else if (tracking == "none") pusher = function (){}
+    callback = function(json){
+      console.log("onfolder called", history)
       pusher.call(history, {
         path: path,
         json: json,
@@ -177,7 +175,16 @@ FileManager.prototype.gotoAdvancedPath = function(path, tracking)
         }, "Интерфейс переводчика", "?open=" + path)
       $(fm.table).find('tbody').html('')
       fm.updateTree(json, path)
-    })
+    }
+  }
+  if (!this.account)
+  {
+    this.on_file(path)
+    return
+  }
+  return this.account.getJSON(this.account.get_repo_suffix() + "contents/"
+                              + path + '?ref=' + this.account.branch)
+    .then(callback)
 }
 
 FileManager.prototype.gotoHome = function ()
