@@ -54,7 +54,8 @@ GHAccount.prototype.rawRequest = function(url, type, data, onprogress)
 GHAccount.prototype.request = function(url, type, data, onprogress)
 {
   let result = this.rawRequest(url, type, data, onprogress)
-  return result.then(function(answer){return JSON.parse(answer)})
+  return result.then(function(answer)
+    {if (answer != "") return JSON.parse(answer)})
 }
 
 GHAccount.prototype.check_authdata = function (authdata, on_success, on_fail)
