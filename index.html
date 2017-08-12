@@ -93,7 +93,7 @@
       $.each(params, function(i, d)
         {
           let r = d.split('=')
-          pairs[r[0]] = r[1]
+          pairs[r[0]] = decodeURIComponent(r[1])
         })
       return pairs
     }
@@ -780,9 +780,10 @@
     $(document).ready(function()
     {
       $('[data-toggle="popover"]').popover()
-      var authdata = get_authdata()
-      var account = new GHAccount(authdata, "SBT-community",
+      let authdata = get_authdata()
+      let account = new GHAccount(authdata, "SBT-community",
         "Starbound_RU", 'web-interface')
+      let callargs = get_call_arguments()
       if (authdata == false)
       {
         document.getElementById('auth-form').style.display = ''
@@ -805,7 +806,7 @@
         $("#fm-navbar").slideUp()
         $("#editor-navigation").slideDown()
         editor.filedata = json
-        editor.open_json(Base64.decode(json.content))
+        editor.open_json(Base64.decode(json.content), callargs.goto)
       }
 
       let filemanager = new FileManager($("#file-browser")[0],
@@ -875,7 +876,6 @@
       })
 
       progressrefreshed.then(function (){
-        var callargs = get_call_arguments()
         if (callargs.open)
           filemanager.gotoAdvancedPath(unescape(callargs.open), "replace")
         else

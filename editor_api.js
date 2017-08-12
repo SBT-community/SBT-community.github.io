@@ -331,13 +331,13 @@ theEditor.prototype.get_json = function ()
   return thejson
 }
 
-theEditor.prototype.json_onload = function (data)
+theEditor.prototype.json_onload = function (data, gotopattern)
 {
   this.json = []
   this.navbar.innerHTML = ""
-  var page = 1
+  let page = 1
   $('#current-filename').text(this.filedata.name)
-  var editor = this
+  let editor = this
   function get_onclick(start)
   {
     return (function(){
@@ -352,10 +352,14 @@ theEditor.prototype.json_onload = function (data)
   }
   let has_untranslated = false
   let ii = 0
+  let target_pagestart = 0
   let last_i = 0
   for (let i = 0 ; i < data.length; i += 1)
   {
     let texts = data[i]["Texts"]
+    if (gotopattern && texts["Eng"].match(gotopattern)){
+      target_pagestart = last_i
+    }
     let translated = ("Rus" in texts) && (texts["Rus"].length > 0)
     has_untranslated = has_untranslated || !translated
     if (ii == editors_per_page - 1 | i == data.length - 1)
@@ -380,8 +384,8 @@ theEditor.prototype.json_onload = function (data)
     ii += 1
   }
   this.json = data
-  $('#navbarel-0').addClass('active')
-  this.load_part(0)
+  $('#navbarel-' + target_pagestart).addClass('active')
+  this.load_part(target_pagestart)
 }
 
 
@@ -398,8 +402,8 @@ theEditor.prototype.reset = function ()
   this.filedata = {}
 }
 
-theEditor.prototype.open_json = function (content)
+theEditor.prototype.open_json = function (content, gotopattern)
 {
   let data = $.parseJSON(content)
-  this.json_onload(data)
+  this.json_onload(data, gotopattern)
 }
