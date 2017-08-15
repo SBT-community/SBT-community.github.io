@@ -858,7 +858,7 @@
       let resultsList = new FileManager(listHolder[0], null, null,
         function(p){
           let pattern = $('#searchstring').val()
-          let newwin = window.open('?open='+escape(p)+'&goto='+escape(pattern))
+          let newwin = window.open('?open='+escape(p)+'&goto='+encodeURIComponent(pattern))
           if (newwin)
             newwin.focus()
           else

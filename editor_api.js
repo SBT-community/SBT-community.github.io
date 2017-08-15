@@ -357,7 +357,8 @@ theEditor.prototype.json_onload = function (data, gotopattern)
   for (let i = 0 ; i < data.length; i += 1)
   {
     let texts = data[i]["Texts"]
-    if (gotopattern && texts["Eng"].match(gotopattern)){
+    if (gotopattern && (texts["Eng"].match(gotopattern) ||
+        (texts["Rus"] && texts["Rus"].match(gotopattern)))){
       target_pagestart = last_i
     }
     let translated = ("Rus" in texts) && (texts["Rus"].length > 0)
