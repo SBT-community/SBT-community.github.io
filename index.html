@@ -878,7 +878,7 @@
 
       progressrefreshed.then(function (){
         if (callargs.open)
-          filemanager.gotoAdvancedPath(unescape(callargs.open), "replace")
+          filemanager.gotoAdvancedPath(unescape(callargs.open), "none")
         else
           filemanager.gotoHome()
         theWorker.justSend("getstatus",

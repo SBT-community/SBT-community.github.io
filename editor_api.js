@@ -256,7 +256,7 @@ theEditor.prototype.generate_label_checker = function(ii, maxwidth, maxheight)
 }
 
 
-theEditor.prototype.load_part = function (start)
+theEditor.prototype.load_part = function (start, selected)
 {
   this.subeditors = {}
   this.holder.html("")
@@ -281,6 +281,9 @@ theEditor.prototype.load_part = function (start)
     fixed_schema.schema.title = titletext
     var subeditor = new JSONEditor(this.holder[0], fixed_schema)
     subeditor.setValue(this.json[i])
+    subeditor.root_container.id = 'element-' + i
+    if (i === selected)
+      $(subeditor.root_container).addClass('alert-warning')
     this.subeditors[i] = subeditor
     if (this.json[i]['DeniedAlternatives'] &&
       this.json[i]['DeniedAlternatives'].length > 0)
@@ -353,6 +356,7 @@ theEditor.prototype.json_onload = function (data, gotopattern)
   let has_untranslated = false
   let ii = 0
   let target_pagestart = 0
+  let target_i = -1
   let last_i = 0
   for (let i = 0 ; i < data.length; i += 1)
   {
@@ -360,6 +364,7 @@ theEditor.prototype.json_onload = function (data, gotopattern)
     if (gotopattern && (texts["Eng"].match(gotopattern) ||
         (texts["Rus"] && texts["Rus"].match(gotopattern)))){
       target_pagestart = last_i
+      target_i = i
     }
     let translated = ("Rus" in texts) && (texts["Rus"].length > 0)
     has_untranslated = has_untranslated || !translated
@@ -386,7 +391,10 @@ theEditor.prototype.json_onload = function (data, gotopattern)
   }
   this.json = data
   $('#navbarel-' + target_pagestart).addClass('active')
-  this.load_part(target_pagestart)
+  this.load_part(target_pagestart, target_i)
+  if (target_i >=0){
+    window.location.hash = '#element-' + target_i
+  }
 }
 
 
