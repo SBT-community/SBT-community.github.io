@@ -207,6 +207,25 @@
                 theWorker.justSend('getstatus', {id: 'global-progress', path: "translations/"})
               })
               $('#pullRequired').slideDown()
+              $('#resetFork').click(function() {
+                if (confirm("Вы действительно хотите удалить все свои данные?"+
+                  " После этого действия Вы начнёте перевод с того же места," +
+                  " где на данный момент остановилась команда SBT."))
+                account.rawRequest(account.get_repo_suffix(), "DELETE")
+                  .then(function(){
+                    alert("Все Ваши данные успешно удалены! " +
+                      "Страница будет перезагружена.")
+                      location.reload(true)
+                    }).fail(function(){alert("Не удалось удалить Ваш " +
+                      "репозиторий! Попробуйте сделать это вручную со" +
+                      " страницы настроек репозитория на github.com" +
+                      ", на которую Вы будете перенаправлены.")
+                      let w = window.open('https://github.com/' +
+                        account.authdata.uname + '/' + account.repo +
+                        '/settings')
+                      w.focus()
+                    })
+              })
               $('#toGH').click(function() {
                 let w = window.open('https://github.com/' +
                   account.authdata.uname + '/' + account.repo +
@@ -656,7 +675,8 @@
   в нее изменения и будете готовы предложить свой перевод
   команде SBT. Вы также можете
   <a id="toGH" href='#'>
-  перейти на github</a> в свою личную копию перевода.</p>
+  перейти на github</a> в свою личную копию перевода или
+  <a id="resetFork" href='#'>сбросить</a> все свои изменения.</p>
   </div><div class="col-sm-4">
   <button id="pullMe" class="btn btn-success" style="display:none;">
   Запрос на слияние</button>
