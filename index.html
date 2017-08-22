@@ -154,7 +154,6 @@
         html: true,
         trigger: "none",
         placement: "bottom"}
-      let bounded = false
       let markasread = function() {
         account.request('notifications', 'PUT', JSON.stringify({}))
       }
@@ -165,10 +164,8 @@
       let on_notification = function(a) {
         if (a.length > 0) {
           $('#fm-navbar').popover("show")
-          if (!bounded){
-            $('#readntf').click(markafterdelay)
-            bounded = true
-          }
+          $('#readntf').unbind('click.markasread')
+          $('#readntf').bind('click.markasread', markafterdelay)
         }
         else {
           $('#fm-navbar').popover("hide")
