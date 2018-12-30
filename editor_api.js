@@ -331,10 +331,12 @@ theEditor.prototype.load_part = function (start, selected)
         if (result.length < 2 && submatch) {
           var matched = ""
           if (result.length == 0) {
+            // If query looks like 'player.pro...' and doesnt match
             matched = query.split('.')
             if (matched.length == 0) {return result}
             matched = matched[0]
           } else {
+            // If there is only one hit for query
             matched = result[0].name
           }
           for (var i = 0;i < endings.length; i++) {
@@ -346,6 +348,14 @@ theEditor.prototype.load_part = function (start, selected)
         }
         return result
       },
+      matcher: function (flag, reverse, c) {
+        for (var i = reverse.length-1; i>=0; i--) {
+          if (reverse[i] == '>' || reverse[i] == ' ') { return }
+          else if (reverse[i] == flag) {
+            return reverse.substr(i+1)
+          }
+        }
+      }
     },
     displayTpl: "<li>${name} <a style='color: #585858'>${desc}</a></li>",
     insertTpl: "<${name}>",
