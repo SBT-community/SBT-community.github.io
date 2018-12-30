@@ -152,7 +152,7 @@ function makeCarousel(name)
 function referenceLookup(subtree, path)
 {
   let pageref = path.split('/').pop().split('.')[0]
-  let siteUrl = "http://starbounder.org"
+  let siteUrl = "https://starbounder.org"
   let apiUrl = siteUrl + "/mediawiki/api.php?"
   let to_replace = $(subtree).find('h3')
   let sysAnch = document.createElement("A")
