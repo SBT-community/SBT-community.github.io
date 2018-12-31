@@ -309,7 +309,8 @@ theEditor.prototype.load_part = function (start, selected)
   let colors = [
     "green",
     "white",
-    "orange"
+    "orange",
+    "cyan"
   ]
 
   let color_autocompletion = {
