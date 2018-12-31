@@ -629,7 +629,7 @@
   <!-- Alerts-->
   <div class="alert alert-success fade in" id='commitSuccess'
   style='display:none;'>
-  <a href='javascript:$("#commitSuccess").slideUp()' class="close">&times;</a>
+  <a href='#' onclick='$("#commitSuccess").slideUp()' class="close">&times;</a>
   <strong>Успех!</strong> Ваши изменения успешно сохранены!
   </div>
   <div class="alert alert-info" id='commitWait'
@@ -644,12 +644,12 @@
   </div>
   <div class="alert alert-danger fade in" id='commitFailed'
   style='display:none;'>
-  <a href='javascript:$("#commitFailed").slideUp()' class="close">&times;</a>
+  <a href='#' onclick='$("#commitFailed").slideUp()' class="close">&times;</a>
   <p id='commitFailedText'></p>
   </div>
   <div class="alert alert-danger fade in" id='loginRequiredAlert'
   style='display:none;'>
-  <a href='javascript:$("#loginRequiredAlert").slideUp()' class="close">&times;</a>
+  <a href='#' onclick='$("#loginRequiredAlert").slideUp()' class="close">&times;</a>
   <strong>Ошибка!</strong> Чтобы сохранить изменения нужно войти.
   </div>
   <!-- /Alerts-->
