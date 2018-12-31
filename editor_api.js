@@ -310,37 +310,16 @@ theEditor.prototype.load_part = function (start, selected)
     callbacks: {
       filter: function (query, data, key) {
         var result = []
+        let q_till_dot = query.split('.')[0]
         var submatch = false
         for (var i = 0; i < data.length; i++) {
-          var a = ""
-          var b = ""
-          if (data[i].name.length > query.length) {
-            a = data[i].name
-            b = query
-          } else {
-            a = query
-            b = data[i].name
-          }
-          if (a.startsWith(b)) {
-            submatch = true
-          }
-          if (data[i].name.startsWith(query)) {
+          if (data[i].name.startsWith(q_till_dot)) {
             result.push({name: data[i].name, desc: data[i].desc})
           }
         }
-        if (result.length < 2 && submatch) {
-          var matched = ""
-          if (result.length == 0) {
-            // If query looks like 'player.pro...' and doesnt match
-            matched = query.split('.')
-            if (matched.length == 0) {return result}
-            matched = matched[0]
-          } else {
-            // If there is only one hit for query
-            matched = result[0].name
-          }
+        if (result.length == 1) {
           for (var i = 0;i < endings.length; i++) {
-            let with_ending = matched + '.' + endings[i].name
+            let with_ending = result[0].name + '.' + endings[i].name
             if (with_ending.startsWith(query)) {
               result.push({name: with_ending, desc: endings[i].desc})
             }
