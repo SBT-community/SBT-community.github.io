@@ -259,6 +259,7 @@ theEditor.prototype.generate_label_checker = function(ii, maxwidth, maxheight)
 theEditor.prototype.load_part = function (start, selected)
 {
   this.subeditors = {}
+  var fin = false // if we need to place closing '>' brace
   let tags = [
     {name: "player", desc: "Игрок"},
     {name: "self", desc: "Говорящий НИП"},
@@ -310,14 +311,21 @@ theEditor.prototype.load_part = function (start, selected)
     callbacks: {
       filter: function (query, data, key) {
         var result = []
-        let q_till_dot = query.split('.')[0]
-        var submatch = false
+        let query_parts = query.split('.')
+        let q_till_dot = query_parts[0]
+        let submatch = query_parts.length == 1
+        //no dots, using startsWith
+        // otherwise the full match is needed
         for (var i = 0; i < data.length; i++) {
-          if (data[i].name.startsWith(q_till_dot)) {
+          if ((submatch && data[i].name.startsWith(q_till_dot))
+              || data[i].name == q_till_dot) {
             result.push({name: data[i].name, desc: data[i].desc})
           }
         }
+        fin = false // the second suggestion is possible
         if (result.length == 1) {
+          if (result[0].name == q_till_dot) {fin = true}
+          // we have a final suggestion, so closing brace anyway
           for (var i = 0;i < endings.length; i++) {
             let with_ending = result[0].name + '.' + endings[i].name
             if (with_ending.startsWith(query)) {
@@ -387,7 +395,18 @@ theEditor.prototype.load_part = function (start, selected)
   $(this.holder).find("[name$=\"[Comment]\"]").each(function(i,d){d.readOnly=true})
   $(this.holder).find("textarea[name$=\"]\"]").each(function(i,d){
       d.className = 'input-lg form-control inputor'
-      $(d).atwho(tag_autocompletion)
+      $(d).atwho(tag_autocompletion).on("inserted.atwho", function(e,l,be) {
+        if (fin) {return} // let autocompleter finish its job
+        let pos = e.target.selectionStart
+        let old = e.target.value
+        e.target.value = old.substr(0, pos-2) + old.substr(pos)
+        e.target.selectionStart = pos - 2
+        e.target.selectionEnd = pos - 2
+        let atwho = $(e.target).data('atwho')
+        // show autocompleter with updated suggestions again after a short
+        // time to prevent its immediate disappearence
+        setTimeout(function() {atwho.dispatch({type: "click"})}, 100)
+      })
       if (d.value.length != 0)
       {
         d.rows = Math.max(Math.ceil(d.value.length/27), d.rows)
