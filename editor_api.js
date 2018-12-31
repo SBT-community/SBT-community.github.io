@@ -259,7 +259,7 @@ theEditor.prototype.generate_label_checker = function(ii, maxwidth, maxheight)
 theEditor.prototype.load_part = function (start, selected)
 {
   this.subeditors = {}
-  var fin = false // if we need to place closing '>' brace
+  var fin = true // if we need to place closing '>' brace
   let tags = [
     {name: "player", desc: "Игрок"},
     {name: "self", desc: "Говорящий НИП"},
@@ -305,6 +305,20 @@ theEditor.prototype.load_part = function (start, selected)
     {name: "accusative", desc: "Винительный падеж (кого, что)"},
     {name: "dative", desc: "Дательный падеж (кому, чему)"}
   ]
+
+  let colors = [
+    "green",
+    "white",
+    "orange"
+  ]
+
+  let color_autocompletion = {
+    at: "^",
+    delay: 1,
+    data: colors,
+    displayTpl: "<li class='outlined' style='color:${name};'><b>${name}</b></li>",
+    insertTpl: "^${name};"
+  }
 
   let tag_autocompletion = {
     at: "<",
@@ -395,8 +409,11 @@ theEditor.prototype.load_part = function (start, selected)
   $(this.holder).find("[name$=\"[Comment]\"]").each(function(i,d){d.readOnly=true})
   $(this.holder).find("textarea[name$=\"]\"]").each(function(i,d){
       d.className = 'input-lg form-control inputor'
-      $(d).atwho(tag_autocompletion).on("inserted.atwho", function(e,l,be) {
+      $(d).atwho(color_autocompletion)
+          .atwho(tag_autocompletion)
+          .on("inserted.atwho", function(e,l,be) {
         if (fin) {return} // let autocompleter finish its job
+        fin = true
         let pos = e.target.selectionStart
         let old = e.target.value
         e.target.value = old.substr(0, pos-2) + old.substr(pos)
