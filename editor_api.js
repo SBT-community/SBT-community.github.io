@@ -303,7 +303,17 @@ theEditor.prototype.load_part = function (start, selected)
         if (result.length == 1) {
           if (result[0].name == q_till_dot) {fin = true}
           // we have a final suggestion, so closing brace anyway
+          var exist = {}
+          if (query_parts.length > 1) {
+            exist[query_parts[1]] = true
+          }
           for (var i = 0;i < endings.length; i++) {
+            let ending = endings[i].name
+            let spl = ending.split('.')
+            if (spl.length > 1 && ! exist[spl[0]]) {
+              exist[spl[0]] = true
+              result.push({name: result[0].name + '.' + spl[0] + '.', desc: "..."})
+            }
             let with_ending = result[0].name + '.' + endings[i].name
             if (with_ending.startsWith(query)) {
               result.push({name: with_ending, desc: endings[i].desc})
@@ -367,9 +377,11 @@ theEditor.prototype.load_part = function (start, selected)
       $(d).atwho(color_autocompletion)
           .atwho(tag_autocompletion)
           .on("inserted.atwho", function(e,l,be) {
+        let pos = e.target.selectionStart
+        // The tag can not end with '.'
+        if (e.target.value[pos-3] == '.') {fin = false}
         if (fin) {return} // let autocompleter finish its job
         fin = true
-        let pos = e.target.selectionStart
         let old = e.target.value
         e.target.value = old.substr(0, pos-2) + old.substr(pos)
         e.target.selectionStart = pos - 2
