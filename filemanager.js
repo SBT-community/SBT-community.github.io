@@ -151,7 +151,7 @@ FileManager.prototype.gotoAdvancedPath = function(path, tracking)
   if(path.match(/^.*\.[a-zA-Z]+$/)) callback = function(json){
     fm.gotoAdvancedPath(path.replace(/\/[^\/]+$/, ""), tracking)
       .then(function(){
-        console.log("onfile called", history)
+        //console.log("onfile called", history)
         fm.on_file(json)
         if(tracking != "none")
           history.replaceState({
@@ -167,7 +167,7 @@ FileManager.prototype.gotoAdvancedPath = function(path, tracking)
     if(tracking == "replace") pusher = history.replaceState
     else if (tracking == "none") pusher = function (){}
     callback = function(json){
-      console.log("onfolder called", history)
+      //console.log("onfolder called", history)
       pusher.call(history, {
         path: path,
         json: json,
