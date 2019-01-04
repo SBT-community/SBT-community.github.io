@@ -260,65 +260,27 @@ theEditor.prototype.load_part = function (start, selected)
 {
   this.subeditors = {}
   var fin = true // if we need to place closing '>' brace
-  let tags = [
-    {name: "player", desc: "Игрок"},
-    {name: "self", desc: "Говорящий НИП"},
-    {name: "sail", desc: "КЭП"},
-    {name: "clothing", desc: "Предмет одежды, который хочет получить НИП"},
-    {name: "clothingIngredients", desc: "Ингридиенты для создания одежды НИП"},
-    {name: "rewards", desc: "Награда за квест"},
-    {name: "extraRewards", desc: "Дополнительные пиксели за квест"},
-    {name: "friend", desc: "Друг квестодателя"},
-    {name: "questGiver", desc: "Персонаж, дающий квест"},
-    {name: "fetchedItems", desc: "Сырьё для квеста"},
-    {name: "target", desc: "Целевой НИП"},
-    {name: "gift", desc: "Подарок по квесту"},
-    {name: "enemy.name", desc: "Имя первого врага по квесту"},
-    {name: "enemy1", desc: "Второй враг по квесту"},
-    {name: "enemy2", desc: "Третий враг по квесту"},
-    {name: "enemy3", desc: "Четвёртый враг по квесту"},
-    {name: "enemy4", desc: "Пятый враг по квесту"},
-    {name: "enemy5", desc: "Шестой враг по квесту"},
-    {name: "enemy6", desc: "Седьмой враг по квесту"},
-    {name: "enemy.type", desc: "Общее название группы врагов по квесту"},
-    {name: "victim", desc: "НИП-заложник по квесту"},
-    {name: "receivedItems", desc: "Предметы, ожидаемые квестодателем"},
-    {name: "item", desc: "Предмет"}
-  ]
-  let endings = [
-    {name: "pronoun.verbEnding", desc: "окончание для делал()/делал(а)"},
-    {name: "pronoun.verb2Ending", desc: "окончание для долж(ен)/долж(на)"},
-    {name: "pronoun.verb3Ending", desc: "окончание для делал(ся)/делал(ась)"},
-    {name: "pronoun.verb4Ending", desc: "окончание для смог()/смог(ла)"},
-    {name: "pronoun.adjEnding", desc: "окончание для как(ой)/как(ая)"},
-    {name: "pronoun.adj2Ending", desc: "окончание для красн(ый)/красн(ая)"},
-    {name: "pronoun.adj3Ending", desc: "окончание для велик(ий)/велик(ая)"},
-    {name: "pronoun.adj4Ending", desc: "окончание для как(им)/как(ой)"},
-    {name: "pronoun.subject", desc: "он/она"},
-    {name: "pronoun.capitalSubject", desc: "Он/Она"},
-    {name: "pronoun.reflexive", desc: "их/его/её"},
-    {name: "pronoun.capitalReflexive", desc: "Их/Его/Её"},
-    {name: "pronoun.object", desc: "им/ему/ей"},
-    {name: "pronoun.capitalObject", desc: "Им/Ему/Ей"},
-    {name: "pronoun.copulative", desc: "о них/нём/ней"},
-    {name: "pronoun.copulativePast", desc: "с ними/ним/ней"},
-    {name: "accusative", desc: "Винительный падеж (кого, что)"},
-    {name: "dative", desc: "Дательный падеж (кому, чему)"}
-  ]
 
-  let colors = [
-    "green",
-    "white",
-    "orange",
-    "cyan"
-  ]
+  var endings = []
+
+  // Helps to match the autocompletion sequence regardless of spaces
+  let matcher = function (flag, reverse, c) {
+    for (var i = reverse.length-1; i>=0; i--) {
+      if (reverse[i] == '>' || reverse[i] == ' ') { return }
+      else if (reverse[i] == flag) {
+        return reverse.substr(i+1)
+      }
+    }
+  }
 
   let color_autocompletion = {
     at: "^",
     delay: 1,
-    data: colors,
     displayTpl: "<li class='outlined' style='color:${name};'><b>${name}</b></li>",
-    insertTpl: "^${name};"
+    insertTpl: "^${name};",
+    callbacks: {
+      matcher: matcher
+    }
   }
 
   let tag_autocompletion = {
@@ -350,18 +312,10 @@ theEditor.prototype.load_part = function (start, selected)
         }
         return result
       },
-      matcher: function (flag, reverse, c) {
-        for (var i = reverse.length-1; i>=0; i--) {
-          if (reverse[i] == '>' || reverse[i] == ' ') { return }
-          else if (reverse[i] == flag) {
-            return reverse.substr(i+1)
-          }
-        }
-      }
+      matcher: matcher
     },
     displayTpl: "<li>${name} <a style='color: #585858'>${desc}</a></li>",
     insertTpl: "<${name}>",
-    data: tags,
     limit: 500,
     delay: 1
   }
@@ -430,6 +384,12 @@ theEditor.prototype.load_part = function (start, selected)
         d.rows = Math.max(Math.ceil(d.value.length/27), d.rows)
       }
     })
+  // Load names from the json
+  $.getJSON("names.json", function(result) {
+    $(".inputor").atwho("load", "<", result["tags"])
+    $(".inputor").atwho("load", "^", result["colors"])
+    endings = result["endings"]
+  })
   $(this.holder).find('div[data-schemapath^="root.Files."]').each(function(i,c){
       let prefix_len = "root.Files.".length
       let path = $(c).attr('data-schemapath').substring(prefix_len)
