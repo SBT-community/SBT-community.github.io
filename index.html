@@ -414,11 +414,30 @@
 
     function commit(account, editor)
     {
+      function onconflict(upd)
+      {
+        $('#conflictMessage').modal()
+        function finish(result)
+        {
+          $('#conflictMessage').modal('hide')
+          editor.reset()
+          editor.filedata = upd
+          editor.json_onload(result)
+        }
+        let upd_json = JSON.parse(Base64.decode(upd.content))
+        let obj = editor.get_json()
+        resolveConflict(obj, upd_json).then(finish).catch(function(reason){
+          alert('Файлы не могут быть совмещены, поскольку '+ reason +
+            '. Ваши изменения будут отброшены.')
+          finish(upd_json)
+        })
+      }
       let noconflict = account.getJSON(editor.filedata.url.slice(api_prefix.length))
         .then(function(updated)
         {
-          if (updated.content !== editor.filedata.content)
-            throw updated
+          if (updated.content !== editor.filedata.content) {
+            onconflict(updated)
+          }
         })
       let progressrefreshed = theWorker.send("refreshprogress")
       let newjson = editor.get_json()
@@ -475,24 +494,6 @@
           JSON.stringify({ajax:d, self:t}, null, 2)
         $('#commitFailed').slideDown().delay(10000).slideUp()
       }
-      noconflict.catch(function(upd)
-      {
-        $('#conflictMessage').modal()
-        function finish(result)
-        {
-          $('#conflictMessage').modal('hide')
-          editor.reset()
-          editor.filedata = upd
-          editor.json_onload(result)
-        }
-        let upd_json = JSON.parse(Base64.decode(upd.content))
-        let obj = editor.get_json()
-        resolveConflict(obj, upd_json).then(finish).catch(function(reason){
-          alert('Файлы не могут быть совмещены, поскольку '+ reason +
-            '. Ваши изменения будут отброшены.')
-          finish(upd_json)
-        })
-      })
       let translation_updated = Promise.all([progressrefreshed, noconflict])
         .then(function()
       {
